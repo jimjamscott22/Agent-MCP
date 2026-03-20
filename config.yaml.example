@@ -1,0 +1,21 @@
+roots:
+  - /home/jamie/Projects
+  - /home/jamie/School
+  - /home/jamie/Homelab
+
+agent_filenames:
+  - AGENTS.md
+  - agents.md
+
+ignore_dirs:
+  - .git
+  - node_modules
+  - .venv
+  - dist
+  - build
+  - __pycache__
+
+merge_mode: hierarchy
+cache_enabled: true
+parse_sections: true
+follow_symlinks: false
