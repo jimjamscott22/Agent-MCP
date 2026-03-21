@@ -155,53 +155,122 @@ The parser extracts common headings when present:
 
 Missing sections are allowed. Raw markdown is always retained.
 
-## MCP Tools
+## Getting Started
 
-- `list_projects`: return all indexed projects with metadata
-- `get_project(project_name)`: return one project, raw markdown, parsed sections, and relationships
-- `resolve_context(path)`: return effective merged context, matched files, and resolution trace
-- `search_projects(query)`: search names, paths, tags, summaries, and raw markdown
-- `refresh_index()`: rescan and report added, changed, and removed projects
-
-## MCP Resources
-
-- `agents://projects`
-- `agents://project/{project_name}`
-- `agents://project/{project_name}/raw`
-- `agents://project/{project_name}/effective`
-- `agents://path/{encoded_path}`
-
-Resources return read-only JSON payloads, except the `/raw` resource which returns the raw markdown content.
-
-## Local Development
-
-Install dependencies:
+### 1. Install
 
 ```bash
 python3 -m pip install -e .
 ```
 
-Prepare config:
+### 2. Configure
 
 ```bash
 cp config.yaml.example config.yaml
 ```
 
-Run the server over stdio:
+Edit `config.yaml` to point `roots` at the directories you want scanned. Every directory listed must already exist. The server will recursively find all `AGENTS.md` and `agents.md` files under those roots.
+
+### 3. Connect to an MCP Client
+
+The server communicates over stdio using the MCP protocol. You can connect it to any MCP-compatible client.
+
+**Claude Desktop** — add this to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "agents-registry": {
+      "command": "mcp-agents-registry",
+      "env": {
+        "AGENTS_REGISTRY_CONFIG": "/absolute/path/to/config.yaml"
+      }
+    }
+  }
+}
+```
+
+**Claude Code** — add this to your `.claude/settings.json` or run `claude mcp add`:
+
+```json
+{
+  "mcpServers": {
+    "agents-registry": {
+      "command": "mcp-agents-registry",
+      "env": {
+        "AGENTS_REGISTRY_CONFIG": "/absolute/path/to/config.yaml"
+      }
+    }
+  }
+}
+```
+
+**Run manually** (for testing):
 
 ```bash
 AGENTS_REGISTRY_CONFIG=config.yaml python3 server.py
 ```
 
-Or use the console entry point:
+## Usage
 
-```bash
-AGENTS_REGISTRY_CONFIG=config.yaml mcp-agents-registry
-```
+Once connected, the server exposes five tools that your MCP client can call.
+
+### `list_projects`
+
+Returns every indexed project with its name, root path, tags, summary, and parent/child relationships.
+
+Use this to get an overview of all discovered `AGENTS.md` files across your configured roots.
+
+### `get_project(project_name)`
+
+Returns full details for a single project — raw markdown, parsed sections, tags, and relationships.
+
+Example: `get_project("frontend")` returns the parsed content of the `AGENTS.md` found in a directory named `frontend`.
+
+### `resolve_context(path)`
+
+The core tool. Given any file or directory path, returns the **effective merged context** by combining all `AGENTS.md` files from ancestor directories. The response includes:
+
+- The merged sections (purpose, commands, coding rules, etc.)
+- A resolution trace showing which files matched and how conflicts were resolved
+
+Example: calling `resolve_context("/home/user/Projects/LastSeen/frontend/src/App.tsx")` would merge instructions from:
+
+1. `/home/user/Projects/AGENTS.md` (broadest)
+2. `/home/user/Projects/LastSeen/AGENTS.md`
+3. `/home/user/Projects/LastSeen/frontend/AGENTS.md` (nearest, highest priority)
+
+### `search_projects(query)`
+
+Full-text search across project names, paths, tags, summaries, and raw markdown. Results are ranked by relevance.
+
+Example: `search_projects("react testing")` finds projects mentioning React and testing.
+
+### `refresh_index()`
+
+Rescans all configured roots and reports how many projects were added, changed, or removed since the last scan. Call this after creating or editing `AGENTS.md` files.
+
+## MCP Resources
+
+Resources provide read-only access to registry data via URI:
+
+| URI                                    | Returns                                |
+| -------------------------------------- | -------------------------------------- |
+| `agents://projects` | Full project index as JSON |
+| `agents://project/{name}` | Single project record as JSON |
+| `agents://project/{name}/raw` | Raw markdown content |
+| `agents://project/{name}/effective` | Resolved context for the project root |
+| `agents://path/{encoded_path}` | Resolved context for any file path |
 
 ## Testing
 
 Run the unit test suite:
+
+```bash
+python3 -m pytest tests/ -v
+```
+
+Or with unittest:
 
 ```bash
 python3 -m unittest discover -s tests -v
