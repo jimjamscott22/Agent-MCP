@@ -250,6 +250,46 @@ Example: `search_projects("react testing")` finds projects mentioning React and 
 
 Rescans all configured roots and reports how many projects were added, changed, or removed since the last scan. Call this after creating or editing `AGENTS.md` files.
 
+## Admin Web UI
+
+The project now includes an optional local admin web interface for common operational tasks.
+
+### Install web dependencies
+
+```bash
+python3 -m pip install -e .[web]
+```
+
+### Run the admin UI
+
+```bash
+AGENTS_REGISTRY_CONFIG=config.yaml mcp-agents-registry-web
+```
+
+Optional flags:
+
+```bash
+mcp-agents-registry-web --host 127.0.0.1 --port 8765 --config config.yaml
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8765
+```
+
+### Admin endpoints
+
+The UI uses these HTTP endpoints:
+
+- `GET /api/health`
+- `GET /api/projects`
+- `GET /api/projects/{project_name}`
+- `GET /api/projects/{project_name}/effective`
+- `GET /api/search?query=...`
+- `GET /api/context?path=...`
+- `POST /api/refresh`
+
 ## MCP Resources
 
 Resources provide read-only access to registry data via URI:

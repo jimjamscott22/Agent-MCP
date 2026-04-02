@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agents Registry Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <section class="panel">
+      <header class="panel-head">
+        <h2>Registry Control</h2>
+        <span class="status" id="status">Ready</span>
+      </header>
+      <div class="panel-body">
+        <div class="controls">
+          <input id="search" placeholder="Search projects (example: frontend testing)" />
+          <button id="searchBtn" class="secondary">Search</button>
+        </div>
+        <div class="action-row">
+          <button id="refreshBtn">Refresh Index</button>
+          <button id="loadBtn" class="secondary">Reload Projects</button>
+        </div>
+        <ul id="projects" class="project-list"></ul>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="panel-head">
+        <h2>Inspector</h2>
+      </header>
+      <div class="panel-body">
+        <div class="summary-box" id="summary">Select a project to inspect details or resolve context for any path.</div>
+        <textarea id="pathInput" placeholder="Path to resolve context for (must be under configured roots)"></textarea>
+        <div class="action-row">
+          <button id="resolveBtn">Resolve Context</button>
+          <button id="effectiveBtn" class="secondary">Project Effective Context</button>
+        </div>
+        <pre id="output">No data yet.</pre>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

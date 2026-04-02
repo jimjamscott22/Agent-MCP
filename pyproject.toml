@@ -21,9 +21,14 @@ dependencies = [
 dev = [
   "pytest>=8.0.0",
 ]
+web = [
+  "fastapi>=0.115.0",
+  "uvicorn>=0.30.0",
+]
 
 [project.scripts]
 mcp-agents-registry = "mcp_agents_registry.server:main"
+mcp-agents-registry-web = "mcp_agents_registry.web:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["mcp_agents_registry"]
