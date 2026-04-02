@@ -13,6 +13,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 python3 -m pip install -e .
 ```
 
+**Install with web + test extras:**
+```bash
+python3 -m pip install -e .[dev,web]
+```
+
 **Run tests:**
 ```bash
 python3 -m pytest tests/ -v
@@ -35,6 +40,13 @@ AGENTS_REGISTRY_CONFIG=config.yaml python3 server.py
 AGENTS_REGISTRY_CONFIG=config.yaml mcp-agents-registry
 ```
 
+**Run the admin web UI:**
+```bash
+AGENTS_REGISTRY_CONFIG=config.yaml mcp-agents-registry-web
+# optional
+mcp-agents-registry-web --host 127.0.0.1 --port 8765 --config config.yaml
+```
+
 ## Architecture
 
 The server follows a pipeline: **scan → parse → cache → registry → resolve → serve**.
@@ -45,6 +57,7 @@ The server follows a pipeline: **scan → parse → cache → registry → resol
 |--------|------|
 | `server.py` (root) | Entry point; delegates to `mcp_agents_registry.server:main` |
 | `mcp_agents_registry/server.py` | Creates MCP server, registers 5 tools + 5 resources + 2 prompts |
+| `mcp_agents_registry/web.py` | Creates FastAPI admin server, mounts static assets, and exposes admin API routes |
 | `config.py` | Loads/validates YAML config; `AppConfig` dataclass |
 | `models.py` | Core dataclasses: `ProjectRecord`, `ParsedAgentContent`, `EffectiveContext`, `ResolutionStep`, `RefreshSummary` |
 | `scanner.py` | Walks filesystem roots, finds agent files, computes mtime/sha256/size metadata |
@@ -55,6 +68,15 @@ The server follows a pipeline: **scan → parse → cache → registry → resol
 | `resources.py` | MCP resource payload generators (5 URIs under `agents://`) |
 | `prompts.py` | Optional MCP prompt templates |
 | `utils.py` | Path normalization, sha256 hashing, URL encoding |
+
+### Admin Web UI Notes
+
+- The admin page is served from `mcp_agents_registry/web_assets/templates/admin.html`.
+- Frontend assets are split into:
+   - `mcp_agents_registry/web_assets/static/styles.css`
+   - `mcp_agents_registry/web_assets/static/app.js`
+- The FastAPI app mounts `web_assets/static` at `/static`.
+- Admin API routes live in `mcp_agents_registry/web.py` and intentionally reuse `AgentsRegistry` methods.
 
 ### Context Resolution Flow
 

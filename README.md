@@ -36,7 +36,14 @@ Many codebases have layered agent instructions. A workspace root may define glob
 │   ├── resources.py
 │   ├── scanner.py
 │   ├── server.py
-│   └── utils.py
+│   ├── utils.py
+│   ├── web.py
+│   └── web_assets/
+│       ├── static/
+│       │   ├── app.js
+│       │   └── styles.css
+│       └── templates/
+│           └── admin.html
 ├── pyproject.toml
 ├── README.md
 ├── server.py
@@ -278,6 +285,16 @@ Then open:
 http://127.0.0.1:8765
 ```
 
+### Development workflow (local iteration)
+
+From the repository root, this single PowerShell command will sync deps, start the admin server, and open the UI in your browser:
+
+```powershell
+uv sync; $env:AGENTS_REGISTRY_CONFIG = "config.yaml"; Start-Process "http://127.0.0.1:8765"; uv run mcp-agents-registry-web --host 127.0.0.1 --port 8765
+```
+
+Stop the server with `Ctrl+C` in the same terminal when done.
+
 ### Admin endpoints
 
 The UI uses these HTTP endpoints:
@@ -289,6 +306,15 @@ The UI uses these HTTP endpoints:
 - `GET /api/search?query=...`
 - `GET /api/context?path=...`
 - `POST /api/refresh`
+
+### UI implementation notes
+
+- The admin UI backend is implemented in `mcp_agents_registry/web.py`.
+- The page template is loaded from `mcp_agents_registry/web_assets/templates/admin.html`.
+- Frontend code is split into static files served at `/static`:
+  - `mcp_agents_registry/web_assets/static/styles.css`
+  - `mcp_agents_registry/web_assets/static/app.js`
+- The admin API layer reuses `AgentsRegistry` directly to keep MCP and web behavior consistent.
 
 ## MCP Resources
 
