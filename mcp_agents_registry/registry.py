@@ -23,7 +23,7 @@ from .models import (
 from .parser import parse_agent_markdown
 from .resolver import ContextResolver
 from .scanner import scan_agent_files
-from .utils import compact_text, ensure_within_roots, normalize_path, read_text_file, sha256_file, unique_preserving_order
+from .utils import compact_text, ensure_within_roots, normalize_path, normalize_user_path, read_text_file, sha256_file, unique_preserving_order
 
 
 class AgentsRegistry:
@@ -567,13 +567,13 @@ class AgentsRegistry:
         return payload
 
     def _validate_managed_file_path(self, path: str | Path, *, must_exist: bool) -> Path:
-        normalized_path = normalize_path(path, follow_symlinks=self.config.follow_symlinks)
+        normalized_path = normalize_user_path(path, follow_symlinks=self.config.follow_symlinks)
         if not ensure_within_roots(normalized_path, self.config.roots):
             raise ValueError(f"Path is outside configured roots: {normalized_path}")
-        if normalized_path.name.casefold() not in _SUPPORTED_MANAGED_FILENAMES:
+        if normalized_path.name not in _SUPPORTED_MANAGED_FILENAMES:
             raise ValueError(
                 f"Unsupported managed file: {normalized_path.name}. "
-                "Only AGENTS.md and CLAUDE.md variants are supported."
+                "Only AGENTS.md/agents.md and CLAUDE.md/claude.md are supported."
             )
         if must_exist and not normalized_path.exists():
             raise FileNotFoundError(f"Managed file not found: {normalized_path}")
@@ -666,12 +666,15 @@ def _score_project(project: ProjectRecord, terms: list[str]) -> int:
 
 
 _SUPPORTED_MANAGED_FILENAMES = {
+    "AGENTS.md",
     "agents.md",
+    "CLAUDE.md",
     "claude.md",
 }
 
 
 def _atomic_write_text(path: Path, content: str) -> None:
+    """Write text atomically by fsyncing a temporary sibling file then replacing the target."""
     with tempfile.NamedTemporaryFile(
         mode="w",
         encoding="utf-8",
@@ -688,6 +691,7 @@ def _atomic_write_text(path: Path, content: str) -> None:
 
 
 def _upsert_markdown_section(raw_markdown: str, *, section_heading: str, section_content: str) -> str:
+    """Replace a matching markdown heading block or append a new heading block at the end."""
     lines = raw_markdown.splitlines()
     target = section_heading.strip().casefold()
     start_index: int | None = None

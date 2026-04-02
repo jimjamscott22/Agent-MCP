@@ -20,7 +20,13 @@ class InventoryStore:
         payload = json.loads(self.inventory_path.read_text(encoding="utf-8"))
         if not isinstance(payload, dict):
             raise ValueError("Inventory file must contain a top-level mapping.")
-        version = int(payload.get("version", 0))
+        raw_version = payload.get("version", 0)
+        try:
+            version = int(raw_version)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Invalid inventory version format: {raw_version!r}. Expected integer {INVENTORY_VERSION}."
+            ) from exc
         if version != INVENTORY_VERSION:
             raise ValueError(f"Unsupported inventory version: {version}")
         data = payload.get("data", {})

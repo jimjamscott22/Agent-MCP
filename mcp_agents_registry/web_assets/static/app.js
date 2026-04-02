@@ -215,16 +215,39 @@ async function listInstallations() {
     const accountId = document.getElementById('instAccountId').value.trim();
     const deviceId = document.getElementById('instDeviceId').value.trim();
     const agentName = document.getElementById('instAgentName').value.trim();
-    const skill = parseCsvList(document.getElementById('instSkills').value)[0] || '';
-    const query = new URLSearchParams({
-      account_id: accountId,
-      device_id: deviceId,
-      agent_name: agentName,
-      skill,
-    });
-    const payload = await callApi(`/api/installations?${query.toString()}`);
+    const skillFilters = parseCsvList(document.getElementById('instSkills').value);
+    const installations = [];
+    if (skillFilters.length === 0) {
+      const query = new URLSearchParams({
+        account_id: accountId,
+        device_id: deviceId,
+        agent_name: agentName,
+      });
+      const payload = await callApi(`/api/installations?${query.toString()}`);
+      installations.push(...(payload.installations || []));
+    } else {
+      const seen = new Set();
+      for (const skill of skillFilters) {
+        const query = new URLSearchParams({
+          account_id: accountId,
+          device_id: deviceId,
+          agent_name: agentName,
+          skill,
+        });
+        const payload = await callApi(`/api/installations?${query.toString()}`);
+        for (const installation of payload.installations || []) {
+          const key = `${installation.account_id}|${installation.device_id}|${String(installation.agent_name).toLowerCase()}`;
+          if (seen.has(key)) {
+            continue;
+          }
+          seen.add(key);
+          installations.push(installation);
+        }
+      }
+    }
+    const payload = { installations };
     outputNode.textContent = pretty(payload);
-    summaryNode.textContent = `Found ${(payload.installations || []).length} installation(s).`;
+    summaryNode.textContent = `Found ${installations.length} installation(s).`;
   } catch (error) {
     setStatus('Error');
     outputNode.textContent = String(error);

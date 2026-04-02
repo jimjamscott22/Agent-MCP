@@ -1,17 +1,19 @@
 # MCP Agents Registry
 
-`mcp-agents-registry` is a local MCP server in Python that discovers `AGENTS.md` and `agents.md` files across explicitly whitelisted roots, builds a searchable registry, and resolves the effective inherited agent context for any path inside those roots.
+`mcp-agents-registry` is a local MCP server in Python that discovers `AGENTS.md`, `agents.md`, `CLAUDE.md`, and `claude.md` files across explicitly whitelisted roots, builds a searchable registry, resolves effective inherited context for any path inside those roots, and provides inventory management for coding agents/accounts/devices/skills.
 
 It is designed for coding-agent workflows where project-local instruction files exist at workspace, repository, and subproject levels.
 
 ## What It Does
 
-- Scans one or more configured roots for `AGENTS.md` / `agents.md`
+- Scans one or more configured roots for `AGENTS.md` / `agents.md` / `CLAUDE.md` / `claude.md`
 - Ignores junk directories such as `.git`, `node_modules`, `.venv`, `dist`, `build`, and `__pycache__`
 - Stores raw markdown plus structured parsed sections
 - Builds stable project records with parent/child relationships
 - Resolves effective inherited context for arbitrary paths
 - Exposes registry data through MCP tools and read-only MCP resources
+- Tracks inventory of accounts/devices/installed agents/skills
+- Supports safe read/edit operations for AGENTS/CLAUDE markdown files
 - Caches parsed results to avoid unnecessary reparsing of unchanged files
 
 ## Why It Is Useful
@@ -66,6 +68,8 @@ roots:
 agent_filenames:
   - AGENTS.md
   - agents.md
+  - CLAUDE.md
+  - claude.md
 
 ignore_dirs:
   - .git
@@ -79,6 +83,7 @@ merge_mode: hierarchy
 cache_enabled: true
 parse_sections: true
 follow_symlinks: false
+inventory_path: .cache/agents_inventory.json
 ```
 
 Notes:
@@ -90,7 +95,7 @@ Notes:
 
 ## How Scanning Works
 
-Each discovered `AGENTS.md` creates one project record.
+Each discovered `AGENTS.md`/`CLAUDE.md` file creates one project record.
 
 Each record includes:
 
@@ -162,6 +167,44 @@ The parser extracts common headings when present:
 
 Missing sections are allowed. Raw markdown is always retained.
 
+## Inventory Management
+
+The server includes a persistent inventory store (JSON with schema versioning) to track:
+
+- Accounts
+- Devices
+- Agent installations on account/device pairs
+- Skills per installation
+
+This data is separate from scan cache and defaults to:
+
+```text
+.cache/agents_inventory.json
+```
+
+### Example inventory workflows
+
+- Create account/device records
+- Assign an agent + skills to an account/device pair
+- Query where a specific agent is installed
+- Query effective skills on an account/device
+- Generate coverage reports (unassigned devices, unused accounts, skill totals)
+
+## Managed File Editing
+
+The server supports safe read/edit operations for managed markdown files:
+
+- `AGENTS.md` / `agents.md`
+- `CLAUDE.md` / `claude.md`
+
+Safety rules:
+
+- File path must be inside configured roots
+- Unsupported filenames are rejected
+- Writes are atomic
+- Optional optimistic concurrency via `expected_sha256`
+- Section-aware updates are supported via heading upsert
+
 ## Getting Started
 
 ### 1. Install
@@ -220,7 +263,7 @@ AGENTS_REGISTRY_CONFIG=config.yaml python3 server.py
 
 ## Usage
 
-Once connected, the server exposes five tools that your MCP client can call.
+Once connected, the server exposes registry + inventory + managed-file tools.
 
 ### `list_projects`
 
@@ -256,6 +299,21 @@ Example: `search_projects("react testing")` finds projects mentioning React and 
 ### `refresh_index()`
 
 Rescans all configured roots and reports how many projects were added, changed, or removed since the last scan. Call this after creating or editing `AGENTS.md` files.
+
+### Inventory tools
+
+- `list_accounts`, `create_account`, `update_account`, `delete_account`
+- `list_devices`, `create_device`, `update_device`, `delete_device`
+- `list_installations`, `assign_agent_installation`, `remove_agent_installation`
+- `where_is_agent_installed`, `skills_for_account_device`
+- `inventory_coverage`, `search_inventory`
+
+### Managed file tools
+
+- `list_managed_files(path_query?)`
+- `read_managed_file(path)`
+- `update_managed_file(path, content, expected_sha256?)`
+- `update_managed_file_section(path, section_heading, section_content, expected_sha256?)`
 
 ## Admin Web UI
 
@@ -306,6 +364,25 @@ The UI uses these HTTP endpoints:
 - `GET /api/search?query=...`
 - `GET /api/context?path=...`
 - `POST /api/refresh`
+- `GET /api/accounts`
+- `POST /api/accounts`
+- `PATCH /api/accounts/{account_id}`
+- `DELETE /api/accounts/{account_id}`
+- `GET /api/devices`
+- `POST /api/devices`
+- `PATCH /api/devices/{device_id}`
+- `DELETE /api/devices/{device_id}`
+- `GET /api/installations`
+- `POST /api/installations`
+- `DELETE /api/installations`
+- `GET /api/inventory/coverage`
+- `GET /api/inventory/search`
+- `GET /api/inventory/where-agent`
+- `GET /api/inventory/skills`
+- `GET /api/files`
+- `GET /api/files/read`
+- `PUT /api/files/write`
+- `PUT /api/files/write-section`
 
 ### UI implementation notes
 
@@ -327,6 +404,10 @@ Resources provide read-only access to registry data via URI:
 | `agents://project/{name}/raw` | Raw markdown content |
 | `agents://project/{name}/effective` | Resolved context for the project root |
 | `agents://path/{encoded_path}` | Resolved context for any file path |
+| `agents://inventory` | Full inventory snapshot + coverage |
+| `agents://inventory/account/{account_id}` | Inventory installations for one account |
+| `agents://inventory/device/{device_id}` | Inventory installations for one device |
+| `agents://managed-files` | Managed AGENTS/CLAUDE files snapshot |
 
 ## Testing
 
