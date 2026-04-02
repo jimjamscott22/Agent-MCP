@@ -176,3 +176,146 @@ class RefreshSummary:
             "changed": self.changed,
             "removed": self.removed,
         }
+
+
+@dataclass(slots=True)
+class AccountRecord:
+    account_id: str
+    display_name: str
+    provider: str = ""
+    metadata: dict[str, str] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "account_id": self.account_id,
+            "display_name": self.display_name,
+            "provider": self.provider,
+            "metadata": dict(self.metadata),
+            "tags": list(self.tags),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "AccountRecord":
+        return cls(
+            account_id=str(payload.get("account_id", "")).strip(),
+            display_name=str(payload.get("display_name", "")).strip(),
+            provider=str(payload.get("provider", "")).strip(),
+            metadata={
+                str(key): str(value)
+                for key, value in dict(payload.get("metadata", {})).items()
+            },
+            tags=[str(tag) for tag in list(payload.get("tags", [])) if str(tag).strip()],
+        )
+
+
+@dataclass(slots=True)
+class DeviceRecord:
+    device_id: str
+    display_name: str
+    platform: str = ""
+    metadata: dict[str, str] = field(default_factory=dict)
+    tags: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "device_id": self.device_id,
+            "display_name": self.display_name,
+            "platform": self.platform,
+            "metadata": dict(self.metadata),
+            "tags": list(self.tags),
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "DeviceRecord":
+        return cls(
+            device_id=str(payload.get("device_id", "")).strip(),
+            display_name=str(payload.get("display_name", "")).strip(),
+            platform=str(payload.get("platform", "")).strip(),
+            metadata={
+                str(key): str(value)
+                for key, value in dict(payload.get("metadata", {})).items()
+            },
+            tags=[str(tag) for tag in list(payload.get("tags", [])) if str(tag).strip()],
+        )
+
+
+@dataclass(slots=True)
+class InstallationRecord:
+    account_id: str
+    device_id: str
+    agent_name: str
+    skills: list[str] = field(default_factory=list)
+    notes: str = ""
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "account_id": self.account_id,
+            "device_id": self.device_id,
+            "agent_name": self.agent_name,
+            "skills": list(self.skills),
+            "notes": self.notes,
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "InstallationRecord":
+        return cls(
+            account_id=str(payload.get("account_id", "")).strip(),
+            device_id=str(payload.get("device_id", "")).strip(),
+            agent_name=str(payload.get("agent_name", "")).strip(),
+            skills=[str(skill) for skill in list(payload.get("skills", [])) if str(skill).strip()],
+            notes=str(payload.get("notes", "")).strip(),
+        )
+
+
+@dataclass(slots=True)
+class ManagedFileRecord:
+    path: str
+    file_name: str
+    sha256: str
+    mtime: float
+    file_size: int
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "path": self.path,
+            "file_name": self.file_name,
+            "sha256": self.sha256,
+            "mtime": self.mtime,
+            "last_modified": isoformat_timestamp(self.mtime),
+            "file_size": self.file_size,
+        }
+
+
+@dataclass(slots=True)
+class InventorySnapshot:
+    accounts: list[AccountRecord] = field(default_factory=list)
+    devices: list[DeviceRecord] = field(default_factory=list)
+    installations: list[InstallationRecord] = field(default_factory=list)
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "accounts": [item.to_dict() for item in self.accounts],
+            "devices": [item.to_dict() for item in self.devices],
+            "installations": [item.to_dict() for item in self.installations],
+        }
+
+    @classmethod
+    def from_dict(cls, payload: dict[str, Any]) -> "InventorySnapshot":
+        return cls(
+            accounts=[
+                AccountRecord.from_dict(item)
+                for item in list(payload.get("accounts", []))
+                if isinstance(item, dict)
+            ],
+            devices=[
+                DeviceRecord.from_dict(item)
+                for item in list(payload.get("devices", []))
+                if isinstance(item, dict)
+            ],
+            installations=[
+                InstallationRecord.from_dict(item)
+                for item in list(payload.get("installations", []))
+                if isinstance(item, dict)
+            ],
+        )

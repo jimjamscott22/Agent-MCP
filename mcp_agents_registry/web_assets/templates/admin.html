@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-  <main class="shell">
+  <main class="shell shell-wide">
     <section class="panel">
       <header class="panel-head">
         <h2>Registry Control</h2>
@@ -18,7 +18,7 @@
       </header>
       <div class="panel-body">
         <div class="controls">
-          <input id="search" placeholder="Search projects (example: frontend testing)" />
+          <input id="search" placeholder="Search projects" />
           <button id="searchBtn" class="secondary">Search</button>
         </div>
         <div class="action-row">
@@ -34,13 +34,78 @@
         <h2>Inspector</h2>
       </header>
       <div class="panel-body">
-        <div class="summary-box" id="summary">Select a project to inspect details or resolve context for any path.</div>
-        <textarea id="pathInput" placeholder="Path to resolve context for (must be under configured roots)"></textarea>
+        <div class="summary-box" id="summary">Select a project or use context/file tools.</div>
+        <textarea id="pathInput" placeholder="Path to resolve context"></textarea>
         <div class="action-row">
           <button id="resolveBtn">Resolve Context</button>
           <button id="effectiveBtn" class="secondary">Project Effective Context</button>
         </div>
         <pre id="output">No data yet.</pre>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="panel-head">
+        <h2>Accounts & Devices</h2>
+      </header>
+      <div class="panel-body">
+        <div class="action-row">
+          <button id="loadInventoryBtn">Load Inventory</button>
+          <button id="coverageBtn" class="secondary">Coverage</button>
+        </div>
+        <div class="two-col">
+          <div>
+            <h3>New Account</h3>
+            <input id="accountId" placeholder="account_id" />
+            <input id="accountName" placeholder="display_name" />
+            <input id="accountProvider" placeholder="provider (optional)" />
+            <button id="createAccountBtn">Create Account</button>
+          </div>
+          <div>
+            <h3>New Device</h3>
+            <input id="deviceId" placeholder="device_id" />
+            <input id="deviceName" placeholder="display_name" />
+            <input id="devicePlatform" placeholder="platform (optional)" />
+            <button id="createDeviceBtn">Create Device</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <header class="panel-head">
+        <h2>Agent Installations & Skills</h2>
+      </header>
+      <div class="panel-body">
+        <input id="instAccountId" placeholder="account_id" />
+        <input id="instDeviceId" placeholder="device_id" />
+        <input id="instAgentName" placeholder="agent_name" />
+        <input id="instSkills" placeholder="skills (comma separated)" />
+        <textarea id="instNotes" placeholder="notes"></textarea>
+        <div class="action-row">
+          <button id="assignInstallationBtn">Assign Installation</button>
+          <button id="listInstallationsBtn" class="secondary">List Installations</button>
+        </div>
+        <div class="action-row">
+          <button id="whereAgentBtn" class="secondary">Where Agent Installed?</button>
+          <button id="skillsBtn" class="secondary">Skills for Account/Device</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel panel-span-2">
+      <header class="panel-head">
+        <h2>AGENTS.md / CLAUDE.md File Editor</h2>
+      </header>
+      <div class="panel-body">
+        <input id="filePathInput" placeholder="Absolute path to AGENTS.md or CLAUDE.md under configured roots" />
+        <div class="action-row">
+          <button id="listFilesBtn" class="secondary">List Managed Files</button>
+          <button id="readFileBtn">Read File</button>
+          <button id="previewSaveBtn" class="secondary">Preview Save</button>
+          <button id="saveFileBtn">Save File</button>
+        </div>
+        <textarea id="fileEditor" class="editor-large" placeholder="File content"></textarea>
       </div>
     </section>
   </main>
