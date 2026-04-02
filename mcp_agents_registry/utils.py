@@ -17,6 +17,15 @@ def normalize_path(path: str | Path, *, follow_symlinks: bool) -> Path:
     return Path(normalized)
 
 
+def normalize_user_path(path: str | Path, *, follow_symlinks: bool) -> Path:
+    raw_path = str(path)
+    if not raw_path.strip():
+        raise ValueError("Path is required.")
+    if "\x00" in raw_path:
+        raise ValueError("Path contains invalid null byte.")
+    return normalize_path(raw_path, follow_symlinks=follow_symlinks)
+
+
 def is_within_root(path: Path, root: Path) -> bool:
     try:
         path.relative_to(root)

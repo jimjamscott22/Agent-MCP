@@ -15,6 +15,8 @@ class ScannerTests(unittest.TestCase):
             (root / "AGENTS.md").write_text("workspace instructions", encoding="utf-8")
             (root / "app").mkdir()
             (root / "app" / "agents.md").write_text("subproject instructions", encoding="utf-8")
+            (root / "bot").mkdir()
+            (root / "bot" / "CLAUDE.md").write_text("agent manager instructions", encoding="utf-8")
             (root / "node_modules").mkdir()
             (root / "node_modules" / "AGENTS.md").write_text("ignore me", encoding="utf-8")
 
@@ -26,14 +28,14 @@ class ScannerTests(unittest.TestCase):
 
             discovered = scan_agent_files(config)
 
-            self.assertEqual(len(discovered), 2)
+            self.assertEqual(len(discovered), 3)
             self.assertEqual(
                 {item.relative_root_from_scan_base for item in discovered},
-                {".", "app"},
+                {".", "app", "bot"},
             )
             self.assertEqual(
                 {Path(item.agent_file_path).name for item in discovered},
-                {"AGENTS.md", "agents.md"},
+                {"AGENTS.md", "agents.md", "CLAUDE.md"},
             )
 
 

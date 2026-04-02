@@ -6,7 +6,7 @@ from typing import Any
 
 from .utils import normalize_path
 
-DEFAULT_AGENT_FILENAMES = ("AGENTS.md", "agents.md")
+DEFAULT_AGENT_FILENAMES = ("AGENTS.md", "agents.md", "CLAUDE.md", "claude.md")
 DEFAULT_IGNORE_DIRS = (".git", "node_modules", ".venv", "dist", "build", "__pycache__")
 
 
@@ -20,6 +20,7 @@ class AppConfig:
     parse_sections: bool = True
     follow_symlinks: bool = False
     cache_path: Path | None = None
+    inventory_path: Path | None = None
 
     def __post_init__(self) -> None:
         if not self.roots:
@@ -42,6 +43,8 @@ class AppConfig:
         self.ignore_dirs = tuple(dict.fromkeys(self.ignore_dirs))
         if self.cache_path is not None:
             self.cache_path = normalize_path(self.cache_path, follow_symlinks=self.follow_symlinks)
+        if self.inventory_path is not None:
+            self.inventory_path = normalize_path(self.inventory_path, follow_symlinks=self.follow_symlinks)
 
     @classmethod
     def from_mapping(cls, payload: dict[str, Any], *, config_path: Path | None = None) -> "AppConfig":
@@ -52,6 +55,12 @@ class AppConfig:
         roots = tuple(_resolve_declared_path(base_dir, value) for value in raw_roots)
         cache_path_value = payload.get("cache_path")
         cache_path = _resolve_declared_path(base_dir, cache_path_value) if cache_path_value else base_dir / ".cache" / "agents_registry_cache.json"
+        inventory_path_value = payload.get("inventory_path")
+        inventory_path = (
+            _resolve_declared_path(base_dir, inventory_path_value)
+            if inventory_path_value
+            else base_dir / ".cache" / "agents_inventory.json"
+        )
         return cls(
             roots=roots,
             agent_filenames=tuple(payload.get("agent_filenames", DEFAULT_AGENT_FILENAMES)),
@@ -61,6 +70,7 @@ class AppConfig:
             parse_sections=bool(payload.get("parse_sections", True)),
             follow_symlinks=bool(payload.get("follow_symlinks", False)),
             cache_path=cache_path,
+            inventory_path=inventory_path,
         )
 
 

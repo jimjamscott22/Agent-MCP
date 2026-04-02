@@ -6,7 +6,7 @@ from typing import Any, Iterable
 
 from .config import AppConfig
 from .models import EffectiveContext, ProjectRecord, ResolutionStep
-from .utils import ensure_within_roots, normalize_path
+from .utils import ensure_within_roots, normalize_user_path
 
 
 class ContextResolver:
@@ -14,7 +14,7 @@ class ContextResolver:
         self.config = config
 
     def resolve(self, target_path: str | Path, projects: Iterable[ProjectRecord]) -> EffectiveContext:
-        normalized_target = normalize_path(target_path, follow_symlinks=self.config.follow_symlinks)
+        normalized_target = normalize_user_path(target_path, follow_symlinks=self.config.follow_symlinks)
         if not ensure_within_roots(normalized_target, self.config.roots):
             raise ValueError(f"Path is outside configured roots: {normalized_target}")
 
