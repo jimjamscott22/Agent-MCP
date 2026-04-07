@@ -1,0 +1,22 @@
+roots:
+  - /home/jimjamscozz/Desktop/Coding Files
+  
+agent_filenames:
+  - AGENTS.md
+  - agents.md
+  - CLAUDE.md
+  - claude.md
+
+ignore_dirs:
+  - .git
+  - node_modules
+  - .venv
+  - dist
+  - build
+  - __pycache__
+
+merge_mode: hierarchy
+cache_enabled: true
+parse_sections: true
+follow_symlinks: false
+inventory_path: .cache/agents_inventory.json
