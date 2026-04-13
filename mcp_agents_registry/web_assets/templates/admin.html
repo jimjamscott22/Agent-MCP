@@ -3,66 +3,106 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agents Registry Admin</title>
+  <title>Agents Registry // Operator Console</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/styles.css" />
 </head>
 <body>
-  <main class="shell shell-wide">
-    <section class="panel">
+  <div class="grain"></div>
+  <div class="grid-overlay"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">◉</span>
+      <span class="brand-name">agents.registry</span>
+      <span class="brand-sub">// operator console</span>
+    </div>
+    <div class="ticker" id="ticker">
+      <span>SIGNAL OK</span><span>•</span><span id="clock">--:--:--</span><span>•</span><span id="projectCount">0 projects</span><span>•</span><span>hierarchy merge</span><span>•</span><span>stdio bridge</span>
+    </div>
+    <div class="status-dot" id="status">Ready</div>
+  </header>
+
+  <main class="shell">
+    <aside class="sidenav">
+      <a href="#sec-registry" class="nav-item active"><span class="num">01</span><span>Registry</span></a>
+      <a href="#sec-inspector" class="nav-item"><span class="num">02</span><span>Inspector</span></a>
+      <a href="#sec-fleet" class="nav-item"><span class="num">03</span><span>Fleet</span></a>
+      <a href="#sec-install" class="nav-item"><span class="num">04</span><span>Installations</span></a>
+      <a href="#sec-editor" class="nav-item"><span class="num">05</span><span>Editor</span></a>
+      <div class="sidenav-foot">
+        <div class="legend"><span class="dot dot-ok"></span>online</div>
+        <div class="legend mono-small">v.registry / hierarchy</div>
+      </div>
+    </aside>
+
+    <section id="sec-registry" class="panel">
       <header class="panel-head">
-        <h2>Registry Control</h2>
-        <span class="status" id="status">Ready</span>
+        <div class="panel-title">
+          <span class="panel-num">01</span>
+          <h2>Registry Control</h2>
+        </div>
+        <span class="panel-tag">index · scan · search</span>
       </header>
       <div class="panel-body">
         <div class="controls">
-          <input id="search" placeholder="Search projects" />
+          <input id="search" placeholder="search projects, tags, paths…" />
           <button id="searchBtn" class="secondary">Search</button>
         </div>
         <div class="action-row">
-          <button id="refreshBtn">Refresh Index</button>
+          <button id="refreshBtn">↻ Refresh Index</button>
           <button id="loadBtn" class="secondary">Reload Projects</button>
         </div>
         <ul id="projects" class="project-list"></ul>
       </div>
     </section>
 
-    <section class="panel">
+    <section id="sec-inspector" class="panel panel-feature">
       <header class="panel-head">
-        <h2>Inspector</h2>
+        <div class="panel-title">
+          <span class="panel-num">02</span>
+          <h2>Inspector</h2>
+        </div>
+        <span class="panel-tag">resolve · trace · merge</span>
       </header>
       <div class="panel-body">
-        <div class="summary-box" id="summary">Select a project or use context/file tools.</div>
-        <textarea id="pathInput" placeholder="Path to resolve context"></textarea>
+        <div class="summary-box" id="summary">
+          <em>Idle.</em> Select a project from the registry, or enter a path below to resolve its effective inherited context.
+        </div>
+        <textarea id="pathInput" placeholder="/absolute/path/to/resolve…"></textarea>
         <div class="action-row">
-          <button id="resolveBtn">Resolve Context</button>
+          <button id="resolveBtn">→ Resolve Context</button>
           <button id="effectiveBtn" class="secondary">Project Effective Context</button>
         </div>
-        <pre id="output">No data yet.</pre>
+        <pre id="output">// no data yet. awaiting input.</pre>
       </div>
     </section>
 
-    <section class="panel">
+    <section id="sec-fleet" class="panel">
       <header class="panel-head">
-        <h2>Accounts & Devices</h2>
+        <div class="panel-title">
+          <span class="panel-num">03</span>
+          <h2>Fleet</h2>
+        </div>
+        <span class="panel-tag">accounts · devices</span>
       </header>
       <div class="panel-body">
         <div class="action-row">
           <button id="loadInventoryBtn">Load Inventory</button>
-          <button id="coverageBtn" class="secondary">Coverage</button>
+          <button id="coverageBtn" class="secondary">Coverage Report</button>
         </div>
         <div class="two-col">
-          <div>
-            <h3>New Account</h3>
+          <div class="subcard">
+            <h3><span class="tick">▸</span> New Account</h3>
             <input id="accountId" placeholder="account_id" />
             <input id="accountName" placeholder="display_name" />
             <input id="accountProvider" placeholder="provider (optional)" />
             <button id="createAccountBtn">Create Account</button>
           </div>
-          <div>
-            <h3>New Device</h3>
+          <div class="subcard">
+            <h3><span class="tick">▸</span> New Device</h3>
             <input id="deviceId" placeholder="device_id" />
             <input id="deviceName" placeholder="display_name" />
             <input id="devicePlatform" placeholder="platform (optional)" />
@@ -72,44 +112,81 @@
       </div>
     </section>
 
-    <section class="panel">
+    <section id="sec-install" class="panel">
       <header class="panel-head">
-        <h2>Agent Installations & Skills</h2>
+        <div class="panel-title">
+          <span class="panel-num">04</span>
+          <h2>Installations &amp; Skills</h2>
+        </div>
+        <span class="panel-tag">assign · locate · audit</span>
       </header>
       <div class="panel-body">
-        <input id="instAccountId" placeholder="account_id" />
-        <input id="instDeviceId" placeholder="device_id" />
-        <input id="instAgentName" placeholder="agent_name" />
-        <input id="instSkills" placeholder="skills (comma separated)" />
-        <textarea id="instNotes" placeholder="notes"></textarea>
+        <div class="field-grid">
+          <input id="instAccountId" placeholder="account_id" />
+          <input id="instDeviceId" placeholder="device_id" />
+          <input id="instAgentName" placeholder="agent_name" />
+          <input id="instSkills" placeholder="skills (comma separated)" />
+        </div>
+        <textarea id="instNotes" placeholder="notes…"></textarea>
         <div class="action-row">
-          <button id="assignInstallationBtn">Assign Installation</button>
+          <button id="assignInstallationBtn">＋ Assign Installation</button>
           <button id="listInstallationsBtn" class="secondary">List Installations</button>
         </div>
         <div class="action-row">
-          <button id="whereAgentBtn" class="secondary">Where Agent Installed?</button>
-          <button id="skillsBtn" class="secondary">Skills for Account/Device</button>
+          <button id="whereAgentBtn" class="secondary">Where is this agent?</button>
+          <button id="skillsBtn" class="secondary">Skills on account/device</button>
         </div>
       </div>
     </section>
 
-    <section class="panel panel-span-2">
+    <section id="sec-editor" class="panel panel-span-2">
       <header class="panel-head">
-        <h2>AGENTS.md / CLAUDE.md File Editor</h2>
+        <div class="panel-title">
+          <span class="panel-num">05</span>
+          <h2>Markdown Editor <span class="editor-sub">— AGENTS.md · CLAUDE.md</span></h2>
+        </div>
+        <span class="panel-tag">atomic · sha-guarded</span>
       </header>
       <div class="panel-body">
-        <input id="filePathInput" placeholder="Absolute path to AGENTS.md or CLAUDE.md under configured roots" />
+        <input id="filePathInput" placeholder="Absolute path under configured roots…" />
         <div class="action-row">
           <button id="listFilesBtn" class="secondary">List Managed Files</button>
           <button id="readFileBtn">Read File</button>
           <button id="previewSaveBtn" class="secondary">Preview Save</button>
-          <button id="saveFileBtn">Save File</button>
+          <button id="saveFileBtn">✓ Commit Save</button>
         </div>
-        <textarea id="fileEditor" class="editor-large" placeholder="File content"></textarea>
+        <textarea id="fileEditor" class="editor-large" placeholder="# File contents will appear here…"></textarea>
       </div>
     </section>
   </main>
 
+  <footer class="footbar">
+    <span>agents-registry</span>
+    <span>—</span>
+    <span>stdio · FastAPI · hierarchy merge</span>
+    <span class="spacer"></span>
+    <span id="footClock">—</span>
+  </footer>
+
+  <script>
+    (function(){
+      function tick(){
+        const d = new Date();
+        const s = d.toTimeString().slice(0,8);
+        const c = document.getElementById('clock');
+        const f = document.getElementById('footClock');
+        if (c) c.textContent = s;
+        if (f) f.textContent = s + ' local';
+      }
+      tick(); setInterval(tick, 1000);
+
+      const items = document.querySelectorAll('.nav-item');
+      items.forEach(it => it.addEventListener('click', () => {
+        items.forEach(i => i.classList.remove('active'));
+        it.classList.add('active');
+      }));
+    })();
+  </script>
   <script src="/static/app.js" defer></script>
 </body>
 </html>

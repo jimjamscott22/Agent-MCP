@@ -38,6 +38,8 @@ function parseCsvList(value) {
 }
 
 function renderProjects(projects) {
+  const counter = document.getElementById('projectCount');
+  if (counter) counter.textContent = `${projects.length} project${projects.length === 1 ? '' : 's'}`;
   projectsNode.innerHTML = '';
   for (const project of projects) {
     const li = document.createElement('li');

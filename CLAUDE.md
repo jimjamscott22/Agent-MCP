@@ -10,34 +10,34 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Install (editable):**
 ```bash
-python3 -m pip install -e .
+uv sync
 ```
 
 **Install with web + test extras:**
 ```bash
-python3 -m pip install -e .[dev,web]
+uv sync --extra dev,web
 ```
 
 **Run tests:**
 ```bash
-python3 -m pytest tests/ -v
+uv run pytest tests/ -v
 # or
-python3 -m unittest discover -s tests -v
+uv run unittest discover -s tests -v
 ```
 
 **Run a single test:**
 ```bash
-python3 -m pytest tests/test_registry.py::AgentsRegistryTest::test_registry_resolves_inherited_context_with_nearest_precedence -v
+uv run pytest tests/test_registry.py::AgentsRegistryTest::test_registry_resolves_inherited_context_with_nearest_precedence -v
 ```
 
 **Run the server locally:**
 ```bash
-AGENTS_REGISTRY_CONFIG=config.yaml python3 server.py
+AGENTS_REGISTRY_CONFIG=config.yaml uv run python3 server.py
 ```
 
 **After installation:**
 ```bash
-AGENTS_REGISTRY_CONFIG=config.yaml mcp-agents-registry
+AGENTS_REGISTRY_CONFIG=config.yaml uv run mcp-agents-registry
 ```
 
 **Run the admin web UI:**
