@@ -334,13 +334,13 @@ AGENTS_REGISTRY_CONFIG=config.yaml mcp-agents-registry-web
 Optional flags:
 
 ```bash
-mcp-agents-registry-web --host 127.0.0.1 --port 8765 --config config.yaml
+mcp-agents-registry-web --host 127.0.0.1 --port 8002 --config config.yaml
 ```
 
 Then open:
 
 ```text
-http://127.0.0.1:8765
+http://127.0.0.1:8002
 ```
 
 ### Development workflow (local iteration)
@@ -348,7 +348,7 @@ http://127.0.0.1:8765
 From the repository root, this single PowerShell command will sync deps, start the admin server, and open the UI in your browser:
 
 ```powershell
-uv sync; $env:AGENTS_REGISTRY_CONFIG = "config.yaml"; Start-Process "http://127.0.0.1:8765"; uv run mcp-agents-registry-web --host 127.0.0.1 --port 8765
+uv sync; $env:AGENTS_REGISTRY_CONFIG = "config.yaml"; Start-Process "http://127.0.0.1:8002"; uv run mcp-agents-registry-web --host 127.0.0.1 --port 8002
 ```
 
 Stop the server with `Ctrl+C` in the same terminal when done.

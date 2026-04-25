@@ -294,7 +294,7 @@ def _load_admin_template() -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run the Agents Registry admin web UI")
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind (default: 127.0.0.1)")
-    parser.add_argument("--port", type=int, default=8765, help="Port to bind (default: 8765)")
+    parser.add_argument("--port", type=int, default=8002, help="Port to bind (default: 8002)")
     parser.add_argument(
         "--config",
         default=None,

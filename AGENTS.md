@@ -44,7 +44,7 @@ AGENTS_REGISTRY_CONFIG=config.yaml uv run mcp-agents-registry
 ```bash
 AGENTS_REGISTRY_CONFIG=config.yaml mcp-agents-registry-web
 # optional
-mcp-agents-registry-web --host 127.0.0.1 --port 8765 --config config.yaml
+mcp-agents-registry-web --host 127.0.0.1 --port 8002 --config config.yaml
 ```
 
 ## Architecture
