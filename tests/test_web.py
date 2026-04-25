@@ -3,6 +3,9 @@ from __future__ import annotations
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import Mock, patch
+
+import mcp_agents_registry.web as web
 
 try:
     from fastapi.testclient import TestClient
@@ -16,6 +19,19 @@ else:
 
 
 class WebApiTests(unittest.TestCase):
+    def test_admin_cli_defaults_to_port_8002(self) -> None:
+        uvicorn = Mock()
+        app = object()
+
+        with (
+            patch("sys.argv", ["mcp-agents-registry-web"]),
+            patch.object(web, "_load_uvicorn", return_value=uvicorn),
+            patch.object(web, "create_web_app", return_value=app),
+        ):
+            web.main()
+
+        uvicorn.run.assert_called_once_with(app, host="127.0.0.1", port=8002)
+
     def test_health_projects_and_context_endpoints(self) -> None:
         if WEB_IMPORT_ERROR is not None or TestClient is None or create_web_app is None:
             self.skipTest(f"Web test dependencies are missing: {WEB_IMPORT_ERROR}")
