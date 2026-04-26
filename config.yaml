@@ -1,5 +1,5 @@
 roots:
-  - D:\Code
+  - /home/jimjamscozz22/Desktop/GitHub/repo
   
 agent_filenames:
   - AGENTS.md
