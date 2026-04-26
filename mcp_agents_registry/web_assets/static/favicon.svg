@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="40%" r="60%">
+      <stop offset="0%" stop-color="#1e1b4b"/>
+      <stop offset="100%" stop-color="#0d0b1e"/>
+    </radialGradient>
+    <linearGradient id="lineTop" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#818cf8" stop-opacity="0.6"/>
+    </linearGradient>
+    <linearGradient id="lineBottom" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#818cf8" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#a78bfa" stop-opacity="0.4"/>
+    </linearGradient>
+    <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="50" cy="50" r="48" fill="url(#bgGrad)"/>
+  <circle cx="50" cy="50" r="48" fill="none" stroke="#312e81" stroke-width="1.5"/>
+
+  <!-- Connecting lines: root → left mid -->
+  <line x1="50" y1="24" x2="26" y2="52" stroke="url(#lineTop)" stroke-width="2" stroke-linecap="round"/>
+  <!-- Connecting lines: root → right mid -->
+  <line x1="50" y1="24" x2="74" y2="52" stroke="url(#lineTop)" stroke-width="2" stroke-linecap="round"/>
+  <!-- Connecting lines: left mid → leaf -->
+  <line x1="26" y1="52" x2="50" y2="76" stroke="url(#lineBottom)" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Connecting lines: right mid → leaf -->
+  <line x1="74" y1="52" x2="50" y2="76" stroke="url(#lineBottom)" stroke-width="1.5" stroke-linecap="round"/>
+
+  <!-- Root node (top) — brightest, teal -->
+  <circle cx="50" cy="22" r="9" fill="#0d9488" filter="url(#softGlow)"/>
+  <circle cx="50" cy="22" r="9" fill="#2dd4bf" opacity="0.85"/>
+  <circle cx="50" cy="22" r="5" fill="#ccfbf1"/>
+
+  <!-- Mid-left node -->
+  <circle cx="24" cy="52" r="7.5" fill="#4338ca" filter="url(#glow)"/>
+  <circle cx="24" cy="52" r="7.5" fill="#818cf8" opacity="0.8"/>
+  <circle cx="24" cy="52" r="4" fill="#e0e7ff"/>
+
+  <!-- Mid-right node -->
+  <circle cx="76" cy="52" r="7.5" fill="#4338ca" filter="url(#glow)"/>
+  <circle cx="76" cy="52" r="7.5" fill="#818cf8" opacity="0.8"/>
+  <circle cx="76" cy="52" r="4" fill="#e0e7ff"/>
+
+  <!-- Leaf node (bottom) — violet -->
+  <circle cx="50" cy="78" r="6.5" fill="#6d28d9" filter="url(#glow)"/>
+  <circle cx="50" cy="78" r="6.5" fill="#a78bfa" opacity="0.85"/>
+  <circle cx="50" cy="78" r="3.5" fill="#ede9fe"/>
+</svg>
