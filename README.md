@@ -210,7 +210,7 @@ Safety rules:
 ### 1. Install
 
 ```bash
-python3 -m pip install -e .
+uv sync
 ```
 
 ### 2. Configure
@@ -322,7 +322,7 @@ The project now includes an optional local admin web interface for common operat
 ### Install web dependencies
 
 ```bash
-python3 -m pip install -e .[web]
+uv sync --extra web
 ```
 
 ### Run the admin UI
