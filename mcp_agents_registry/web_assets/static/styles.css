@@ -153,7 +153,7 @@ body {
     var(--bg-panel);
   border-color: #2f3a18;
 }
-.panel-span-2 { grid-column: 2 / -1; }
+.panel-editor { grid-column: 3; }
 
 .panel-head {
   padding: 18px 22px 14px;
@@ -394,7 +394,7 @@ pre {
 @media (max-width: 1100px) {
   .shell { grid-template-columns: 1fr 1fr; }
   .sidenav { display: none; }
-  .panel-span-2 { grid-column: 1 / -1; }
+  .panel-editor { grid-column: auto; }
 }
 @media (max-width: 760px) {
   .shell { grid-template-columns: 1fr; padding: 20px 16px 60px; }

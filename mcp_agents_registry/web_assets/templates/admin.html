@@ -81,6 +81,26 @@
       </div>
     </section>
 
+    <section id="sec-editor" class="panel panel-editor">
+      <header class="panel-head">
+        <div class="panel-title">
+          <span class="panel-num">05</span>
+          <h2>Markdown Editor <span class="editor-sub">— AGENTS.md · CLAUDE.md</span></h2>
+        </div>
+        <span class="panel-tag">atomic · sha-guarded</span>
+      </header>
+      <div class="panel-body">
+        <input id="filePathInput" placeholder="Absolute path under configured roots…" />
+        <div class="action-row">
+          <button id="listFilesBtn" class="secondary">List Managed Files</button>
+          <button id="readFileBtn">Read File</button>
+          <button id="previewSaveBtn" class="secondary">Preview Save</button>
+          <button id="saveFileBtn">✓ Commit Save</button>
+        </div>
+        <textarea id="fileEditor" class="editor-large" placeholder="# File contents will appear here…"></textarea>
+      </div>
+    </section>
+
     <section id="sec-fleet" class="panel">
       <header class="panel-head">
         <div class="panel-title">
@@ -137,26 +157,6 @@
           <button id="whereAgentBtn" class="secondary">Where is this agent?</button>
           <button id="skillsBtn" class="secondary">Skills on account/device</button>
         </div>
-      </div>
-    </section>
-
-    <section id="sec-editor" class="panel panel-span-2">
-      <header class="panel-head">
-        <div class="panel-title">
-          <span class="panel-num">05</span>
-          <h2>Markdown Editor <span class="editor-sub">— AGENTS.md · CLAUDE.md</span></h2>
-        </div>
-        <span class="panel-tag">atomic · sha-guarded</span>
-      </header>
-      <div class="panel-body">
-        <input id="filePathInput" placeholder="Absolute path under configured roots…" />
-        <div class="action-row">
-          <button id="listFilesBtn" class="secondary">List Managed Files</button>
-          <button id="readFileBtn">Read File</button>
-          <button id="previewSaveBtn" class="secondary">Preview Save</button>
-          <button id="saveFileBtn">✓ Commit Save</button>
-        </div>
-        <textarea id="fileEditor" class="editor-large" placeholder="# File contents will appear here…"></textarea>
       </div>
     </section>
   </main>
