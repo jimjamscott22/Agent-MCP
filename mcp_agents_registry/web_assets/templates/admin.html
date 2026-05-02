@@ -3,25 +3,19 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Agents Registry // Operator Console</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <title>Agents Registry Admin</title>
   <link rel="stylesheet" href="/static/styles.css" />
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
 </head>
 <body>
-  <div class="grain"></div>
-  <div class="grid-overlay"></div>
-
   <header class="topbar">
     <div class="brand">
-      <span class="brand-mark">◉</span>
-      <span class="brand-name">agents.registry</span>
-      <span class="brand-sub">// operator console</span>
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span class="brand-name">Agents Registry</span>
+      <span class="brand-sub">Admin</span>
     </div>
     <div class="ticker" id="ticker">
-      <span>SIGNAL OK</span><span>•</span><span id="clock">--:--:--</span><span>•</span><span id="projectCount">0 projects</span><span>•</span><span>hierarchy merge</span><span>•</span><span>stdio bridge</span>
+      <span>Online</span><span>•</span><span id="clock">--:--:--</span><span>•</span><span id="projectCount">0 projects</span><span>•</span><span>Hierarchy merge</span><span>•</span><span>FastAPI admin</span>
     </div>
     <div class="status-dot" id="status">Ready</div>
   </header>
@@ -30,12 +24,12 @@
     <aside class="sidenav">
       <a href="#sec-registry" class="nav-item active"><span class="num">01</span><span>Registry</span></a>
       <a href="#sec-inspector" class="nav-item"><span class="num">02</span><span>Inspector</span></a>
-      <a href="#sec-fleet" class="nav-item"><span class="num">03</span><span>Fleet</span></a>
+      <a href="#sec-fleet" class="nav-item"><span class="num">03</span><span>Accounts &amp; Devices</span></a>
       <a href="#sec-install" class="nav-item"><span class="num">04</span><span>Installations</span></a>
       <a href="#sec-editor" class="nav-item"><span class="num">05</span><span>Editor</span></a>
       <div class="sidenav-foot">
-        <div class="legend"><span class="dot dot-ok"></span>online</div>
-        <div class="legend mono-small">v.registry / hierarchy</div>
+        <div class="legend"><span class="dot dot-ok"></span>Online</div>
+        <div class="legend mono-small">Hierarchy merge</div>
       </div>
     </aside>
 
@@ -43,9 +37,9 @@
       <header class="panel-head">
         <div class="panel-title">
           <span class="panel-num">01</span>
-          <h2>Registry Control</h2>
+          <h2>Projects</h2>
         </div>
-        <span class="panel-tag">index · scan · search</span>
+        <span class="panel-tag">Index and search</span>
       </header>
       <div class="panel-body">
         <div class="controls">
@@ -66,7 +60,7 @@
           <span class="panel-num">02</span>
           <h2>Inspector</h2>
         </div>
-        <span class="panel-tag">resolve · trace · merge</span>
+        <span class="panel-tag">Resolve context</span>
       </header>
       <div class="panel-body">
         <div class="summary-box" id="summary">
@@ -85,9 +79,9 @@
       <header class="panel-head">
         <div class="panel-title">
           <span class="panel-num">05</span>
-          <h2>Markdown Editor <span class="editor-sub">— AGENTS.md · CLAUDE.md</span></h2>
+          <h2>Markdown Editor <span class="editor-sub">AGENTS.md and CLAUDE.md</span></h2>
         </div>
-        <span class="panel-tag">atomic · sha-guarded</span>
+        <span class="panel-tag">Preview and save</span>
       </header>
       <div class="panel-body">
         <input id="filePathInput" placeholder="Absolute path under configured roots…" />
@@ -105,9 +99,9 @@
       <header class="panel-head">
         <div class="panel-title">
           <span class="panel-num">03</span>
-          <h2>Fleet</h2>
+          <h2>Accounts &amp; Devices</h2>
         </div>
-        <span class="panel-tag">accounts · devices</span>
+        <span class="panel-tag">Inventory</span>
       </header>
       <div class="panel-body">
         <div class="action-row">
@@ -139,7 +133,7 @@
           <span class="panel-num">04</span>
           <h2>Installations &amp; Skills</h2>
         </div>
-        <span class="panel-tag">assign · locate · audit</span>
+        <span class="panel-tag">Assign and locate</span>
       </header>
       <div class="panel-body">
         <div class="field-grid">
@@ -164,7 +158,7 @@
   <footer class="footbar">
     <span>agents-registry</span>
     <span>—</span>
-    <span>stdio · FastAPI · hierarchy merge</span>
+    <span>FastAPI admin · hierarchy merge</span>
     <span class="spacer"></span>
     <span id="footClock">—</span>
   </footer>
