@@ -4,6 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Agents Registry Admin</title>
+  <script>
+    // Apply the saved theme before first paint to avoid a flash.
+    (function () {
+      try {
+        var saved = localStorage.getItem('agentsRegistryTheme');
+        if (saved) document.documentElement.setAttribute('data-theme', saved);
+      } catch (e) {}
+    })();
+  </script>
   <link rel="stylesheet" href="/static/styles.css" />
   <link rel="icon" type="image/svg+xml" href="/static/favicon.svg" />
 </head>
@@ -17,7 +26,24 @@
     <div class="ticker" id="ticker">
       <span>Online</span><span>•</span><span id="clock">--:--:--</span><span>•</span><span id="projectCount">0 projects</span><span>•</span><span>Hierarchy merge</span><span>•</span><span>FastAPI admin</span>
     </div>
-    <div class="status-dot" id="status">Ready</div>
+    <div class="topbar-right">
+      <label class="theme-picker">
+        <span class="theme-picker-label">Theme</span>
+        <select id="themeSelect" class="theme-select" aria-label="Color theme">
+          <option value="light-plus">Light+ (Default Light)</option>
+          <option value="dark-plus">Dark+ (Default Dark)</option>
+          <option value="monokai">Monokai</option>
+          <option value="dracula">Dracula</option>
+          <option value="solarized-light">Solarized Light</option>
+          <option value="solarized-dark">Solarized Dark</option>
+          <option value="github-dark">GitHub Dark</option>
+          <option value="one-dark-pro">One Dark Pro</option>
+          <option value="nord">Nord</option>
+          <option value="night-owl">Night Owl</option>
+        </select>
+      </label>
+      <div class="status-dot" id="status">Ready</div>
+    </div>
   </header>
 
   <main class="shell">
@@ -180,6 +206,20 @@
         items.forEach(i => i.classList.remove('active'));
         it.classList.add('active');
       }));
+
+      // Theme picker: sync the dropdown with the saved theme and persist changes.
+      const themeSelect = document.getElementById('themeSelect');
+      if (themeSelect) {
+        let saved = 'light-plus';
+        try { saved = localStorage.getItem('agentsRegistryTheme') || 'light-plus'; } catch (e) {}
+        themeSelect.value = saved;
+        document.documentElement.setAttribute('data-theme', saved);
+        themeSelect.addEventListener('change', () => {
+          const theme = themeSelect.value;
+          document.documentElement.setAttribute('data-theme', theme);
+          try { localStorage.setItem('agentsRegistryTheme', theme); } catch (e) {}
+        });
+      }
     })();
   </script>
   <script src="/static/app.js" defer></script>

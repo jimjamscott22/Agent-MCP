@@ -16,6 +16,18 @@
   --ok: #16a34a;
   --warn: #b45309;
   --shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --bg-input: #ffffff;
+  --topbar-bg: rgba(255, 255, 255, 0.94);
+  --btn-ink: #ffffff;
+  --feature-line: #bfdbfe;
+  --code-bg: #0f172a;
+  --code-ink: #e2e8f0;
+  --code-line: #1e293b;
+  --scroll-thumb: #cbd5e1;
+  --scroll-thumb-hover: #94a3b8;
+  --pill-bg: #eff6ff;
+  --pill-ink: #1e40af;
+  --pill-line: #bfdbfe;
   --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
 }
@@ -54,7 +66,7 @@ body {
   gap: 24px;
   padding: 14px 28px;
   border-bottom: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.94);
+  background: var(--topbar-bg);
   backdrop-filter: blur(10px);
 }
 
@@ -125,6 +137,67 @@ body {
   height: 8px;
   border-radius: 50%;
   background: var(--ok);
+}
+
+/* topbar right cluster + theme picker */
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.theme-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-dim);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.theme-picker-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.theme-picker-label::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: linear-gradient(135deg, var(--accent) 50%, var(--bg-sunk) 50%);
+  border: 1px solid var(--line);
+}
+
+.theme-select {
+  width: auto;
+  min-height: 34px;
+  padding: 6px 28px 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-input);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M2.5 4.5L6 8l3.5-3.5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.theme-select:hover {
+  border-color: var(--accent);
+}
+
+.theme-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 /* layout */
@@ -219,7 +292,7 @@ body {
 }
 
 .panel-feature {
-  border-color: #bfdbfe;
+  border-color: var(--feature-line);
 }
 
 .panel-editor {
@@ -248,7 +321,7 @@ body {
   font-family: var(--mono);
   font-size: 11px;
   border: 1px solid var(--line);
-  background: #ffffff;
+  background: var(--bg-panel);
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -306,7 +379,7 @@ textarea {
   border: 1px solid var(--line);
   border-radius: 6px;
   padding: 10px 12px;
-  background: #ffffff;
+  background: var(--bg-input);
   color: var(--ink);
   font-family: var(--mono);
   font-size: 13px;
@@ -336,7 +409,7 @@ button {
   border-radius: 6px;
   padding: 10px 14px;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--btn-ink);
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
@@ -355,14 +428,14 @@ button:active {
 }
 
 button.secondary {
-  background: #ffffff;
+  background: var(--bg-panel);
   color: var(--ink-soft);
   border-color: var(--line);
 }
 
 button.secondary:hover {
   color: var(--accent);
-  border-color: #93c5fd;
+  border-color: var(--feature-line);
   background: var(--accent-soft);
 }
 
@@ -377,12 +450,12 @@ button.secondary:hover {
   overflow: auto;
   border: 1px solid var(--line);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--bg-panel);
 }
 
 .project-list li {
   padding: 12px 14px;
-  background: #ffffff;
+  background: var(--bg-panel);
   cursor: pointer;
   border-bottom: 1px solid var(--line-soft);
   transition: background 120ms ease;
@@ -416,9 +489,9 @@ button.secondary:hover {
   display: inline-block;
   margin: 8px 6px 0 0;
   padding: 2px 8px;
-  color: #1e40af;
-  border: 1px solid #bfdbfe;
-  background: var(--accent-soft);
+  color: var(--pill-ink);
+  border: 1px solid var(--pill-line);
+  background: var(--pill-bg);
   border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
@@ -427,9 +500,9 @@ button.secondary:hover {
 /* output pre */
 pre {
   margin: 0;
-  background: #0f172a;
-  color: #e2e8f0;
-  border: 1px solid #1e293b;
+  background: var(--code-bg);
+  color: var(--code-ink);
+  border: 1px solid var(--code-line);
   border-radius: 6px;
   padding: 16px 18px;
   font-family: var(--mono);
@@ -442,7 +515,7 @@ pre {
 }
 
 .summary-box {
-  border: 1px solid #bfdbfe;
+  border: 1px solid var(--feature-line);
   border-left: 3px solid var(--accent);
   border-radius: 6px;
   background: var(--accent-soft);
@@ -508,7 +581,7 @@ pre {
   padding: 14px 28px;
   border-top: 1px solid var(--line);
   color: var(--ink-dim);
-  background: #ffffff;
+  background: var(--bg-panel);
   font-size: 12px;
 }
 
@@ -527,13 +600,13 @@ pre {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: var(--scroll-thumb);
   border-radius: 999px;
   border: 2px solid var(--bg-sunk);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: var(--scroll-thumb-hover);
 }
 
 @media (max-width: 1100px) {
@@ -592,4 +665,301 @@ pre {
   .editor-large {
     min-height: 58vh;
   }
+
+  .theme-picker-label {
+    display: none;
+  }
+}
+
+/* ============================================================
+   VS Code theme presets — applied via [data-theme] on <html>.
+   The default (:root above) is the "Light+ (Default Light)" theme.
+   ============================================================ */
+
+[data-theme="dark-plus"] {
+  --bg: #1e1e1e;
+  --bg-panel: #252526;
+  --bg-subtle: #2d2d30;
+  --bg-sunk: #2a2a2b;
+  --ink: #d4d4d4;
+  --ink-soft: #cccccc;
+  --ink-dim: #969696;
+  --line: #3c3c3c;
+  --line-soft: #333333;
+  --accent: #0a84d4;
+  --accent-hover: #1b95e0;
+  --accent-soft: #094771;
+  --danger: #f48771;
+  --danger-soft: #5a1d1d;
+  --ok: #89d185;
+  --warn: #cca700;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --bg-input: #3c3c3c;
+  --topbar-bg: rgba(30, 30, 30, 0.94);
+  --btn-ink: #ffffff;
+  --feature-line: #094771;
+  --code-bg: #1a1a1a;
+  --code-ink: #d4d4d4;
+  --code-line: #333333;
+  --scroll-thumb: #4e4e4e;
+  --scroll-thumb-hover: #5a5a5a;
+  --pill-bg: #094771;
+  --pill-ink: #cce7ff;
+  --pill-line: #1b6ca8;
+}
+
+[data-theme="monokai"] {
+  --bg: #272822;
+  --bg-panel: #2e2f28;
+  --bg-subtle: #32332c;
+  --bg-sunk: #3a3b32;
+  --ink: #f8f8f2;
+  --ink-soft: #cfcfc2;
+  --ink-dim: #a6a28c;
+  --line: #41423b;
+  --line-soft: #383930;
+  --accent: #66d9ef;
+  --accent-hover: #79e0f2;
+  --accent-soft: #14323a;
+  --danger: #f92672;
+  --danger-soft: #45131f;
+  --ok: #a6e22e;
+  --warn: #e6db74;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --bg-input: #3b3c35;
+  --topbar-bg: rgba(39, 40, 34, 0.94);
+  --btn-ink: #1e1f1a;
+  --feature-line: #2c5b66;
+  --code-bg: #1e1f1a;
+  --code-ink: #f8f8f2;
+  --code-line: #41423b;
+  --scroll-thumb: #54564b;
+  --scroll-thumb-hover: #66695a;
+  --pill-bg: #14323a;
+  --pill-ink: #aef0ff;
+  --pill-line: #2c5b66;
+}
+
+[data-theme="dracula"] {
+  --bg: #282a36;
+  --bg-panel: #2d2f3d;
+  --bg-subtle: #343746;
+  --bg-sunk: #21222c;
+  --ink: #f8f8f2;
+  --ink-soft: #d8d8d2;
+  --ink-dim: #9ea0b0;
+  --line: #44475a;
+  --line-soft: #383a4a;
+  --accent: #bd93f9;
+  --accent-hover: #caa6fb;
+  --accent-soft: #343257;
+  --danger: #ff5555;
+  --danger-soft: #45131f;
+  --ok: #50fa7b;
+  --warn: #f1fa8c;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --bg-input: #21222c;
+  --topbar-bg: rgba(40, 42, 54, 0.94);
+  --btn-ink: #282a36;
+  --feature-line: #6b5fa8;
+  --code-bg: #21222c;
+  --code-ink: #f8f8f2;
+  --code-line: #44475a;
+  --scroll-thumb: #565872;
+  --scroll-thumb-hover: #6a6c8a;
+  --pill-bg: #343257;
+  --pill-ink: #e0d4ff;
+  --pill-line: #6b5fa8;
+}
+
+[data-theme="solarized-light"] {
+  --bg: #fdf6e3;
+  --bg-panel: #fefbf0;
+  --bg-subtle: #f5eed5;
+  --bg-sunk: #eee8d5;
+  --ink: #073642;
+  --ink-soft: #586e75;
+  --ink-dim: #93a1a1;
+  --line: #ddd6c1;
+  --line-soft: #e9e2cd;
+  --accent: #268bd2;
+  --accent-hover: #2076b8;
+  --accent-soft: #e3eef3;
+  --danger: #dc322f;
+  --danger-soft: #fbeaea;
+  --ok: #859900;
+  --warn: #b58900;
+  --shadow: 0 1px 2px rgba(101, 123, 131, 0.12);
+  --bg-input: #fefbf0;
+  --topbar-bg: rgba(253, 246, 227, 0.94);
+  --btn-ink: #ffffff;
+  --feature-line: #a9d2e8;
+  --code-bg: #002b36;
+  --code-ink: #eee8d5;
+  --code-line: #073642;
+  --scroll-thumb: #cfc8b0;
+  --scroll-thumb-hover: #b8b193;
+  --pill-bg: #e3eef3;
+  --pill-ink: #1a6a9e;
+  --pill-line: #a9d2e8;
+}
+
+[data-theme="solarized-dark"] {
+  --bg: #002b36;
+  --bg-panel: #073642;
+  --bg-subtle: #0a3d49;
+  --bg-sunk: #00252e;
+  --ink: #93a1a1;
+  --ink-soft: #839496;
+  --ink-dim: #657b83;
+  --line: #0f4956;
+  --line-soft: #0a3d49;
+  --accent: #268bd2;
+  --accent-hover: #2f97df;
+  --accent-soft: #0a3a4a;
+  --danger: #dc322f;
+  --danger-soft: #3a1414;
+  --ok: #859900;
+  --warn: #b58900;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --bg-input: #00252e;
+  --topbar-bg: rgba(0, 43, 54, 0.94);
+  --btn-ink: #ffffff;
+  --feature-line: #1a6a9e;
+  --code-bg: #00252e;
+  --code-ink: #93a1a1;
+  --code-line: #0f4956;
+  --scroll-thumb: #1a5462;
+  --scroll-thumb-hover: #246473;
+  --pill-bg: #0a3a4a;
+  --pill-ink: #9fcdec;
+  --pill-line: #1a6a9e;
+}
+
+[data-theme="github-dark"] {
+  --bg: #0d1117;
+  --bg-panel: #161b22;
+  --bg-subtle: #1c2129;
+  --bg-sunk: #10151c;
+  --ink: #c9d1d9;
+  --ink-soft: #b1bac4;
+  --ink-dim: #8b949e;
+  --line: #30363d;
+  --line-soft: #21262d;
+  --accent: #58a6ff;
+  --accent-hover: #6cb0ff;
+  --accent-soft: #16304f;
+  --danger: #f85149;
+  --danger-soft: #3a1514;
+  --ok: #3fb950;
+  --warn: #d29922;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  --bg-input: #0d1117;
+  --topbar-bg: rgba(13, 17, 23, 0.94);
+  --btn-ink: #ffffff;
+  --feature-line: #1f4d7a;
+  --code-bg: #010409;
+  --code-ink: #c9d1d9;
+  --code-line: #21262d;
+  --scroll-thumb: #30363d;
+  --scroll-thumb-hover: #484f58;
+  --pill-bg: #16304f;
+  --pill-ink: #9fcbff;
+  --pill-line: #1f4d7a;
+}
+
+[data-theme="one-dark-pro"] {
+  --bg: #282c34;
+  --bg-panel: #2c313a;
+  --bg-subtle: #21252b;
+  --bg-sunk: #21252b;
+  --ink: #abb2bf;
+  --ink-soft: #9da5b4;
+  --ink-dim: #7f8796;
+  --line: #3b4048;
+  --line-soft: #313640;
+  --accent: #61afef;
+  --accent-hover: #74baf1;
+  --accent-soft: #1d3a52;
+  --danger: #e06c75;
+  --danger-soft: #3a1c1f;
+  --ok: #98c379;
+  --warn: #e5c07b;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --bg-input: #1e2227;
+  --topbar-bg: rgba(40, 44, 52, 0.94);
+  --btn-ink: #21252b;
+  --feature-line: #2f5a7d;
+  --code-bg: #21252b;
+  --code-ink: #abb2bf;
+  --code-line: #3b4048;
+  --scroll-thumb: #4b5263;
+  --scroll-thumb-hover: #5c6370;
+  --pill-bg: #1d3a52;
+  --pill-ink: #9fcbf0;
+  --pill-line: #2f5a7d;
+}
+
+[data-theme="nord"] {
+  --bg: #2e3440;
+  --bg-panel: #3b4252;
+  --bg-subtle: #434c5e;
+  --bg-sunk: #2b303b;
+  --ink: #eceff4;
+  --ink-soft: #d8dee9;
+  --ink-dim: #a6adbb;
+  --line: #4c566a;
+  --line-soft: #434c5e;
+  --accent: #88c0d0;
+  --accent-hover: #99ccda;
+  --accent-soft: #2f4a52;
+  --danger: #bf616a;
+  --danger-soft: #3f2024;
+  --ok: #a3be8c;
+  --warn: #ebcb8b;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  --bg-input: #2e3440;
+  --topbar-bg: rgba(46, 52, 64, 0.94);
+  --btn-ink: #2e3440;
+  --feature-line: #4a6e78;
+  --code-bg: #272c36;
+  --code-ink: #d8dee9;
+  --code-line: #4c566a;
+  --scroll-thumb: #4c566a;
+  --scroll-thumb-hover: #5b6680;
+  --pill-bg: #2f4a52;
+  --pill-ink: #b8e0ea;
+  --pill-line: #4a6e78;
+}
+
+[data-theme="night-owl"] {
+  --bg: #011627;
+  --bg-panel: #0b2942;
+  --bg-subtle: #0e2d48;
+  --bg-sunk: #001122;
+  --ink: #d6deeb;
+  --ink-soft: #c2cadb;
+  --ink-dim: #7c93a6;
+  --line: #1d3b53;
+  --line-soft: #13304a;
+  --accent: #82aaff;
+  --accent-hover: #95b8ff;
+  --accent-soft: #0e2f52;
+  --danger: #ef5350;
+  --danger-soft: #341416;
+  --ok: #addb67;
+  --warn: #ecc48d;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+  --bg-input: #001122;
+  --topbar-bg: rgba(1, 22, 39, 0.94);
+  --btn-ink: #001122;
+  --feature-line: #2a527d;
+  --code-bg: #001122;
+  --code-ink: #d6deeb;
+  --code-line: #1d3b53;
+  --scroll-thumb: #234d6e;
+  --scroll-thumb-hover: #2e5f86;
+  --pill-bg: #0e2f52;
+  --pill-ink: #b3ccff;
+  --pill-line: #2a527d;
 }
