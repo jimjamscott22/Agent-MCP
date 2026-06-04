@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent-MCP: Human-in-the-Loop Memory Implementation Plan</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f1f5f9;
+            color: #334155;
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.6;
+        }
+        .document {
+            max-width: 850px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 50px 60px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            border-top: 8px solid #3b82f6;
+        }
+        h1 {
+            color: #0f172a;
+            font-size: 28pt;
+            margin-top: 0;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            font-size: 14pt;
+            color: #64748b;
+            margin-bottom: 40px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
+        }
+        h2 {
+            color: #1e40af;
+            font-size: 18pt;
+            margin-top: 40px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3b82f6;
+            padding-left: 12px;
+        }
+        h3 {
+            color: #0f172a;
+            font-size: 14pt;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        p, ul, ol {
+            font-size: 11pt;
+            margin-bottom: 16px;
+        }
+        ul {
+            padding-left: 24px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        pre {
+            background-color: #1e293b;
+            color: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 10.5pt;
+            font-family: 'Fira Code', Consolas, Monaco, monospace;
+            margin: 20px 0;
+        }
+        code {
+            font-family: 'Fira Code', Consolas, Monaco, monospace;
+            background-color: #f1f5f9;
+            color: #be123c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.95em;
+        }
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            padding: 0;
+        }
+        .callout {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 25px 0;
+        }
+        .callout h4 {
+            margin: 0 0 10px 0;
+            color: #1d4ed8;
+            font-size: 12pt;
+        }
+        .phase-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .tag {
+            display: inline-block;
+            background-color: #e2e8f0;
+            color: #475569;
+            font-size: 8pt;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 8px;
+        }
+        .tag.tool { background-color: #dbeafe; color: #1e40af; }
+        .tag.api { background-color: #dcfce7; color: #166534; }
+        .task-list {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .task-list li {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 12px;
+        }
+        .task-list li::before {
+            content: '☐';
+            position: absolute;
+            left: 0;
+            top: -2px;
+            font-size: 16pt;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="document">
+        <h1>Agent-MCP Implementation Plan</h1>
+        <div class="subtitle">Human-in-the-Loop Memory Updates & Web UI Integration</div>
+
+        <p>This document outlines the technical strategy for extending <strong>Agent-MCP</strong> with a human-in-the-loop memory curation system. By shifting away from autonomous, direct file writes, this architecture allows agents to propose context updates (rules, architectural decisions, solved bugs) which are then queued for manual user approval via the local Admin Web UI.</p>
+
+        <h2>1. The Proposal Pipeline Architecture</h2>
+        <p>Currently, the <code>AgentsRegistry</code> supports direct file editing. We will introduce a staging layer called the <strong>Proposal Queue</strong>. This queue will temporarily hold agent-generated markdown chunks until the user formally approves them, at which point they are merged into the target <code>AGENTS.md</code> file.</p>
+        
+        <div class="callout">
+            <h4>Architectural Shift</h4>
+            <p>Instead of <code>update_managed_file_section</code>, agents will exclusively use a new tool: <code>propose_registry_update</code>. The server will write these proposals to a local SQLite database or JSON file (e.g., <code>.cache/memory_proposals.json</code>) and instantly surface them in the Web UI.</p>
+        </div>
+
+        <h2>2. Data Models & Schemas</h2>
+        <p>A new internal model is required to track the lifecycle of a memory proposal.</p>
+        
+        <pre><code>from pydantic import BaseModel
+from typing import Optional, Literal
+from datetime import datetime
+
+class MemoryProposal(BaseModel):
+    id: str                    # Unique UUID
+    target_project: str        # e.g., "frontend" or root path
+    section_heading: str       # e.g., "Coding Rules", "Notes"
+    proposed_content: str      # The markdown payload
+    rationale: str             # Why the agent thinks this should be saved
+    status: Literal["pending", "approved", "rejected"] = "pending"
+    created_at: datetime
+    agent_id: Optional[str]    # Ties into the Inventory system</code></pre>
+
+        <h2>3. MCP Tool Modifications</h2>
+        
+        <div class="phase-box">
+            <h3><span class="tag tool">MCP Tool</span> propose_registry_update</h3>
+            <p><strong>Purpose:</strong> Allows the agent to submit a draft update without modifying the filesystem.</p>
+            <ul>
+                <li><strong>Inputs:</strong> <code>target_project</code>, <code>section_heading</code>, <code>proposed_content</code>, <code>rationale</code>.</li>
+                <li><strong>Logic:</strong> Validates the target project exists in the registry. Appends the <code>MemoryProposal</code> to the local queue.</li>
+                <li><strong>Return to Agent:</strong> <em>"Proposal [ID] successfully submitted. Awaiting human approval."</em></li>
+            </ul>
+        </div>
+
+        <div class="phase-box">
+            <h3><span class="tag tool">System Prompt Injection</span></h3>
+            <p><strong>Purpose:</strong> Conditions the agent to use the new workflow.</p>
+            <p>We will dynamically prepend this global instruction to the root <code>AGENTS.md</code> resolution:</p>
+            <pre><code>SYSTEM DIRECTIVE: 
+When you resolve a complex bug or establish a new rule, DO NOT assume it should be saved.
+Ask the user: "Should I add this to the project's AGENTS.md?"
+If the user agrees, use the `propose_registry_update` tool. Do not use direct file write tools.</code></pre>
+        </div>
+
+        <h2>4. Web UI Extensions (FastAPI + JS)</h2>
+        <p>The local admin interface (currently at port <code>8002</code>) is the core of the human-in-the-loop experience. We will add a "Memory Proposals" dashboard tab.</p>
+
+        <h3>New API Endpoints</h3>
+        <ul>
+            <li><span class="tag api">GET</span> <code>/api/proposals</code> - Fetch all pending proposals.</li>
+            <li><span class="tag api">POST</span> <code>/api/proposals/{id}/approve</code> - Triggers the actual file write logic (reuses existing <code>update_managed_file_section</code> backend logic) and marks status as approved.</li>
+            <li><span class="tag api">POST</span> <code>/api/proposals/{id}/reject</code> - Marks as rejected and archives.</li>
+            <li><span class="tag api">PATCH</span> <code>/api/proposals/{id}</code> - Allows the human to edit the proposed markdown before approving.</li>
+        </ul>
+
+        <h3>Frontend UX (app.js / admin.html)</h3>
+        <p>The UI will feature a notification badge next to a "Review Queue" tab. Each proposal will render as a card displaying:</p>
+        <ol>
+            <li><strong>Target:</strong> Badge indicating which <code>AGENTS.md</code> file will be modified.</li>
+            <li><strong>Rationale:</strong> The agent's reasoning.</li>
+            <li><strong>Diff Viewer:</strong> A markdown text area where the user can tweak the code before hitting "Merge".</li>
+        </ol>
+
+        <h2>5. Execution Action Items</h2>
+        <p>Follow these steps to implement the workflow in the Python codebase:</p>
+        
+        <ul class="task-list">
+            <li><strong>Data Layer:</strong> Create <code>mcp_agents_registry/proposals.py</code> with the Pydantic schema and JSON file-backed CRUD operations.</li>
+            <li><strong>Server Layer (MCP):</strong> Register <code>@mcp.tool() def propose_registry_update(...)</code> in <code>server.py</code>.</li>
+            <li><strong>Prompt Layer:</strong> Update <code>resolver.py</code> to prepend the System Directive string to the top of resolved context payloads.</li>
+            <li><strong>Web Layer (Backend):</strong> Add the four new <code>/api/proposals</code> routes in <code>web.py</code>.</li>
+            <li><strong>Web Layer (Frontend):</strong> Update <code>admin.html</code> and <code>app.js</code> to include the Proposal Review panel.</li>
+            <li><strong>File Writing:</strong> Link the <code>approve</code> endpoint to the existing <code>update_managed_file_section()</code> utility, ensuring the file's <code>mtime</code> updates correctly trigger an automatic cache invalidation.</li>
+        </ul>
+
+        <div class="callout" style="background-color: #f0fdf4; border-color: #bbf7d0;">
+            <h4 style="color: #15803d;">Bonus: Proactive Context Refresh (Watchdog)</h4>
+            <p>To eliminate polling delays after a proposal is approved, integrate the <code>watchdog</code> Python library in <code>scanner.py</code>. This will instantly detect the human-approved write to <code>AGENTS.md</code> and re-parse the hierarchical context graph in real-time.</p>
+        </div>
+    </div>
+</body>
+</html>
