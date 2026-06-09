@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .registry import AgentsRegistry
+from .server import _propose_registry_update
 
 
 def create_web_app(config_path: str | None = None) -> Any:
@@ -61,6 +62,56 @@ def create_web_app(config_path: str | None = None) -> Any:
     @app.post("/api/refresh")
     def refresh_index() -> dict[str, int]:
         return registry.refresh_index().to_dict()
+
+    @app.get("/api/proposals")
+    def list_proposals(status: str | None = None) -> dict[str, object]:
+        proposals = registry.list_proposals(status=status)
+        return {"proposals": [p.to_dict() for p in proposals]}
+
+    @app.post("/api/proposals")
+    def create_proposal(payload: dict[str, object]) -> dict[str, object]:
+        try:
+            return _propose_registry_update(
+                registry=registry,
+                target_project=str(payload.get("target_project", "")),
+                section_heading=str(payload.get("section_heading", "")),
+                proposed_content=str(payload.get("proposed_content", "")),
+                rationale=str(payload.get("rationale", "")),
+                agent_id=str(payload.get("agent_id", "")),
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.post("/api/proposals/{proposal_id}/approve")
+    def approve_proposal(proposal_id: str) -> dict[str, object]:
+        try:
+            return registry.approve_proposal(proposal_id).to_dict()
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except (ValueError, FileNotFoundError) as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.post("/api/proposals/{proposal_id}/reject")
+    def reject_proposal(proposal_id: str) -> dict[str, object]:
+        try:
+            return registry.reject_proposal(proposal_id).to_dict()
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    @app.patch("/api/proposals/{proposal_id}")
+    def edit_proposal(proposal_id: str, payload: dict[str, object]) -> dict[str, object]:
+        try:
+            return registry.edit_proposal(
+                proposal_id,
+                proposed_content=str(payload["proposed_content"]) if "proposed_content" in payload else None,
+                section_heading=str(payload["section_heading"]) if "section_heading" in payload else None,
+            ).to_dict()
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/accounts")
     def list_accounts() -> dict[str, object]:
