@@ -121,3 +121,35 @@ class ProposalStoreTests(unittest.TestCase):
         store.add(target_project="a", target_path="/a/AGENTS.md",
                   section_heading="S", proposed_content="c", rationale="r")
         self.assertEqual(store.load(), [])
+
+
+class ConfigProposalsTests(unittest.TestCase):
+    def test_allow_direct_writes_defaults_to_false(self) -> None:
+        import tempfile as tmp_mod
+        from mcp_agents_registry.config import AppConfig
+
+        with tmp_mod.TemporaryDirectory() as temp_dir:
+            config = AppConfig(roots=(Path(temp_dir),))
+            self.assertFalse(config.allow_direct_writes)
+
+    def test_proposals_path_defaults_inside_cache_dir(self) -> None:
+        import tempfile as tmp_mod
+        from mcp_agents_registry.config import AppConfig
+
+        with tmp_mod.TemporaryDirectory() as temp_dir:
+            config = AppConfig.from_mapping(
+                {"roots": [temp_dir], "cache_enabled": False},
+                config_path=Path(temp_dir) / "config.yaml",
+            )
+            self.assertIn("memory_proposals.json", str(config.proposals_path))
+
+    def test_allow_direct_writes_from_mapping_reads_yaml_value(self) -> None:
+        import tempfile as tmp_mod
+        from mcp_agents_registry.config import AppConfig
+
+        with tmp_mod.TemporaryDirectory() as temp_dir:
+            config = AppConfig.from_mapping(
+                {"roots": [temp_dir], "allow_direct_writes": True, "cache_enabled": False},
+                config_path=Path(temp_dir) / "config.yaml",
+            )
+            self.assertTrue(config.allow_direct_writes)

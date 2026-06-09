@@ -21,6 +21,8 @@ class AppConfig:
     follow_symlinks: bool = False
     cache_path: Path | None = None
     inventory_path: Path | None = None
+    allow_direct_writes: bool = False
+    proposals_path: Path | None = None
 
     def __post_init__(self) -> None:
         if not self.roots:
@@ -45,6 +47,8 @@ class AppConfig:
             self.cache_path = normalize_path(self.cache_path, follow_symlinks=self.follow_symlinks)
         if self.inventory_path is not None:
             self.inventory_path = normalize_path(self.inventory_path, follow_symlinks=self.follow_symlinks)
+        if self.proposals_path is not None:
+            self.proposals_path = normalize_path(self.proposals_path, follow_symlinks=self.follow_symlinks)
 
     @classmethod
     def from_mapping(cls, payload: dict[str, Any], *, config_path: Path | None = None) -> "AppConfig":
@@ -61,6 +65,12 @@ class AppConfig:
             if inventory_path_value
             else base_dir / ".cache" / "agents_inventory.json"
         )
+        proposals_path_value = payload.get("proposals_path")
+        proposals_path = (
+            _resolve_declared_path(base_dir, proposals_path_value)
+            if proposals_path_value
+            else base_dir / ".cache" / "memory_proposals.json"
+        )
         return cls(
             roots=roots,
             agent_filenames=tuple(payload.get("agent_filenames", DEFAULT_AGENT_FILENAMES)),
@@ -71,6 +81,8 @@ class AppConfig:
             follow_symlinks=bool(payload.get("follow_symlinks", False)),
             cache_path=cache_path,
             inventory_path=inventory_path,
+            allow_direct_writes=bool(payload.get("allow_direct_writes", False)),
+            proposals_path=proposals_path,
         )
 
 
