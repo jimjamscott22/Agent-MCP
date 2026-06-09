@@ -391,4 +391,121 @@ document.getElementById('readFileBtn').addEventListener('click', readManagedFile
 document.getElementById('previewSaveBtn').addEventListener('click', previewSave);
 document.getElementById('saveFileBtn').addEventListener('click', saveManagedFile);
 
+// ── Review Queue ──────────────────────────────────────────────
+
+const proposalListNode = document.getElementById('proposalList');
+const proposalEmptyNode = document.getElementById('proposalEmpty');
+const proposalBadgeNode = document.getElementById('proposalBadge');
+const showHistoryNode = document.getElementById('showHistory');
+
+function renderProposals(proposals) {
+  proposalListNode.innerHTML = '';
+  if (proposals.length === 0) {
+    proposalEmptyNode.style.display = '';
+    return;
+  }
+  proposalEmptyNode.style.display = 'none';
+  for (const p of proposals) {
+    const li = document.createElement('li');
+    li.className = 'card';
+    li.dataset.id = p.id;
+    const isPending = p.status === 'pending';
+    li.innerHTML = `
+      <div class="card-head">
+        <span class="pill">${escapeHtml(p.target_project)}</span>
+        <span class="pill mono-small">${escapeHtml(p.section_heading)}</span>
+        ${p.agent_id ? `<span class="pill">agent: ${escapeHtml(p.agent_id)}</span>` : ''}
+        <span class="pill pill-status pill-${p.status}">${p.status}</span>
+      </div>
+      <p class="card-rationale"><em>${escapeHtml(p.rationale)}</em></p>
+      ${isPending ? `
+        <label class="field-label">Section heading</label>
+        <input class="input-heading" type="text" value="${escapeHtml(p.section_heading)}" />
+        <label class="field-label">Content</label>
+        <textarea class="input-content" rows="6">${escapeHtml(p.proposed_content)}</textarea>
+        <div class="card-actions">
+          <button class="btn btn-primary btn-approve">Approve</button>
+          <button class="btn btn-danger btn-reject">Reject</button>
+        </div>
+      ` : ''}
+    `;
+    if (isPending) {
+      li.querySelector('.btn-approve').addEventListener('click', () => approveProposal(p.id, li));
+      li.querySelector('.btn-reject').addEventListener('click', () => rejectProposal(p.id, li));
+      const contentArea = li.querySelector('.input-content');
+      const headingInput = li.querySelector('.input-heading');
+      contentArea.addEventListener('blur', () => saveProposalEdits(p.id, headingInput.value, contentArea.value));
+      headingInput.addEventListener('blur', () => saveProposalEdits(p.id, headingInput.value, contentArea.value));
+    }
+    proposalListNode.appendChild(li);
+  }
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+async function loadProposals() {
+  try {
+    const showHistory = showHistoryNode && showHistoryNode.checked;
+    const url = showHistory ? '/api/proposals' : '/api/proposals?status=pending';
+    const data = await callApi(url);
+    renderProposals(data.proposals || []);
+    updateProposalBadge(data.proposals ? data.proposals.filter(p => p.status === 'pending').length : 0);
+  } catch (err) {
+    setStatus('Error loading proposals: ' + err.message);
+  }
+}
+
+function updateProposalBadge(count) {
+  if (!proposalBadgeNode) return;
+  if (count > 0) {
+    proposalBadgeNode.textContent = count;
+    proposalBadgeNode.style.display = '';
+  } else {
+    proposalBadgeNode.style.display = 'none';
+  }
+}
+
+async function approveProposal(id, liNode) {
+  try {
+    await callApi(`/api/proposals/${id}/approve`, { method: 'POST' });
+    liNode.remove();
+    await loadProposals();
+  } catch (err) {
+    setStatus('Approve failed: ' + err.message);
+  }
+}
+
+async function rejectProposal(id, liNode) {
+  try {
+    await callApi(`/api/proposals/${id}/reject`, { method: 'POST' });
+    liNode.remove();
+    await loadProposals();
+  } catch (err) {
+    setStatus('Reject failed: ' + err.message);
+  }
+}
+
+async function saveProposalEdits(id, sectionHeading, proposedContent) {
+  try {
+    await callApi(`/api/proposals/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ section_heading: sectionHeading, proposed_content: proposedContent }),
+    });
+  } catch (err) {
+    setStatus('Auto-save failed: ' + err.message);
+  }
+}
+
+if (showHistoryNode) {
+  showHistoryNode.addEventListener('change', loadProposals);
+}
+
 loadProjects();
+loadProposals();
