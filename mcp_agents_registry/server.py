@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from .prompts import build_project_prompt, build_resolve_context_prompt
+from .prompts import build_project_prompt, build_resolve_context_prompt, memory_curation_directive
 from .registry import AgentsRegistry
 from .resources import (
     account_inventory_resource_payload,
@@ -15,6 +15,7 @@ from .resources import (
     project_raw_resource_payload,
     project_resource_payload,
     projects_resource_payload,
+    proposals_resource_payload,
 )
 
 
@@ -305,6 +306,10 @@ def create_server(config_path: str | None = None) -> Any:
     def managed_files_resource() -> str:
         return managed_files_resource_payload(registry)
 
+    @app.resource("agents://directives/memory-curation")
+    def memory_curation_resource() -> str:
+        return memory_curation_directive()
+
     if hasattr(app, "prompt"):
         @app.prompt()
         def explain_path_context(path: str) -> str:
@@ -313,6 +318,10 @@ def create_server(config_path: str | None = None) -> Any:
         @app.prompt()
         def summarize_project(project_name: str) -> str:
             return build_project_prompt(project_name)
+
+        @app.prompt()
+        def memory_curation() -> str:
+            return memory_curation_directive()
 
     return app
 
