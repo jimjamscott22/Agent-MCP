@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 PROPOSALS_VERSION = 1
+_EDITABLE_FIELDS = frozenset({"section_heading", "proposed_content", "rationale", "status", "resolved_at"})
 
 
 @dataclass(slots=True)
@@ -65,7 +66,13 @@ class ProposalStore:
         payload = json.loads(self.proposals_path.read_text(encoding="utf-8"))
         if not isinstance(payload, dict):
             raise ValueError("Proposals file must contain a top-level mapping.")
-        version = int(payload.get("version", 0))
+        raw_version = payload.get("version", 0)
+        try:
+            version = int(raw_version)
+        except (TypeError, ValueError) as exc:
+            raise ValueError(
+                f"Invalid proposals version format: {raw_version!r}. Expected integer {PROPOSALS_VERSION}."
+            ) from exc
         if version != PROPOSALS_VERSION:
             raise ValueError(f"Unsupported proposals version: {version}")
         return [MemoryProposal.from_dict(item) for item in payload.get("proposals", [])]
@@ -120,6 +127,9 @@ class ProposalStore:
         return None
 
     def update(self, proposal_id: str, **fields: Any) -> MemoryProposal:
+        disallowed = set(fields) - _EDITABLE_FIELDS
+        if disallowed:
+            raise ValueError(f"Fields not editable: {disallowed}")
         proposals = self.load()
         for proposal in proposals:
             if proposal.id == proposal_id:

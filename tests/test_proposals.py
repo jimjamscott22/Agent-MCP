@@ -110,6 +110,12 @@ class ProposalStoreTests(unittest.TestCase):
         with self.assertRaises(LookupError):
             self.store.update("no-such-id", section_heading="x")
 
+    def test_update_rejects_immutable_fields(self) -> None:
+        p = self.store.add(target_project="a", target_path="/a/AGENTS.md",
+                           section_heading="S", proposed_content="c", rationale="r")
+        with self.assertRaises(ValueError):
+            self.store.update(p.id, id="hacked", status="approved")
+
     def test_none_path_store_is_a_noop(self) -> None:
         store = ProposalStore(None)
         store.add(target_project="a", target_path="/a/AGENTS.md",
