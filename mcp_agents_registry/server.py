@@ -18,6 +18,33 @@ from .resources import (
 )
 
 
+def _propose_registry_update(
+    registry: Any,
+    target_project: str,
+    section_heading: str,
+    proposed_content: str,
+    rationale: str,
+    agent_id: str = "",
+) -> dict[str, object]:
+    try:
+        record = registry.get_project_record(target_project)
+    except LookupError:
+        raise ValueError(f"Unknown project: {target_project}")
+    proposal = registry.add_proposal(
+        target_project=target_project,
+        target_path=record.agent_file_path,
+        section_heading=section_heading,
+        proposed_content=proposed_content,
+        rationale=rationale,
+        agent_id=agent_id,
+    )
+    return {
+        "proposal_id": proposal.id,
+        "status": proposal.status,
+        "message": f"Proposal {proposal.id} submitted. Awaiting human approval.",
+    }
+
+
 def create_server(config_path: str | None = None) -> Any:
     FastMCP = _load_fastmcp()
     resolved_config_path = config_path or os.environ.get("AGENTS_REGISTRY_CONFIG", "config.yaml")
@@ -45,6 +72,23 @@ def create_server(config_path: str | None = None) -> Any:
     @app.tool()
     def refresh_index() -> dict[str, int]:
         return registry.refresh_index().to_dict()
+
+    @app.tool()
+    def propose_registry_update(
+        target_project: str,
+        section_heading: str,
+        proposed_content: str,
+        rationale: str,
+        agent_id: str = "",
+    ) -> dict[str, object]:
+        return _propose_registry_update(
+            registry=registry,
+            target_project=target_project,
+            section_heading=section_heading,
+            proposed_content=proposed_content,
+            rationale=rationale,
+            agent_id=agent_id,
+        )
 
     @app.tool()
     def list_accounts() -> dict[str, object]:
@@ -202,27 +246,28 @@ def create_server(config_path: str | None = None) -> Any:
     def read_managed_file(path: str) -> dict[str, object]:
         return registry.read_managed_file(path)
 
-    @app.tool()
-    def update_managed_file(path: str, content: str, expected_sha256: str = "") -> dict[str, object]:
-        return registry.update_managed_file(
-            path=path,
-            content=content,
-            expected_sha256=expected_sha256 or None,
-        )
+    if registry.config.allow_direct_writes:
+        @app.tool()
+        def update_managed_file(path: str, content: str, expected_sha256: str = "") -> dict[str, object]:
+            return registry.update_managed_file(
+                path=path,
+                content=content,
+                expected_sha256=expected_sha256 or None,
+            )
 
-    @app.tool()
-    def update_managed_file_section(
-        path: str,
-        section_heading: str,
-        section_content: str,
-        expected_sha256: str = "",
-    ) -> dict[str, object]:
-        return registry.update_managed_file_section(
-            path=path,
-            section_heading=section_heading,
-            section_content=section_content,
-            expected_sha256=expected_sha256 or None,
-        )
+        @app.tool()
+        def update_managed_file_section(
+            path: str,
+            section_heading: str,
+            section_content: str,
+            expected_sha256: str = "",
+        ) -> dict[str, object]:
+            return registry.update_managed_file_section(
+                path=path,
+                section_heading=section_heading,
+                section_content=section_content,
+                expected_sha256=expected_sha256 or None,
+            )
 
     @app.resource("agents://projects")
     def projects_resource() -> str:

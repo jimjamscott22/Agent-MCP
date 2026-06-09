@@ -242,3 +242,75 @@ class RegistryProposalTests(unittest.TestCase):
         self.registry.reject_proposal(p.id)
         with self.assertRaises(ValueError):
             self.registry.reject_proposal(p.id)
+
+
+class ProposeToolTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        root = Path(self._tmp.name)
+        (root / "AGENTS.md").write_text("# Purpose\nTest workspace\n", encoding="utf-8")
+        config_path = root / "config.yaml"
+        config_path.write_text(
+            f"roots:\n  - {root}\ncache_enabled: false\nparse_sections: true\n",
+            encoding="utf-8",
+        )
+        from mcp_agents_registry.registry import AgentsRegistry
+        self.registry = AgentsRegistry.from_config_path(str(config_path))
+        self.registry.refresh_index()
+        self.project_name = self.registry.list_projects()[0]["project_name"]
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_propose_registry_update_returns_proposal_id(self) -> None:
+        from mcp_agents_registry.server import _propose_registry_update
+        result = _propose_registry_update(
+            registry=self.registry,
+            target_project=self.project_name,
+            section_heading="Notes",
+            proposed_content="- new note\n",
+            rationale="good reason",
+        )
+        self.assertIn("proposal_id", result)
+        self.assertEqual(result["status"], "pending")
+
+    def test_propose_registry_update_raises_for_unknown_project(self) -> None:
+        from mcp_agents_registry.server import _propose_registry_update
+        with self.assertRaises(ValueError):
+            _propose_registry_update(
+                registry=self.registry,
+                target_project="nonexistent-project",
+                section_heading="Notes",
+                proposed_content="- x\n",
+                rationale="nope",
+            )
+
+    def test_direct_write_tools_absent_when_flag_is_false(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "AGENTS.md").write_text("# Purpose\nTest\n", encoding="utf-8")
+            config_path = root / "config.yaml"
+            config_path.write_text(
+                f"roots:\n  - {root}\ncache_enabled: false\nallow_direct_writes: false\n",
+                encoding="utf-8",
+            )
+            from mcp_agents_registry.server import create_server
+            app = create_server(str(config_path))
+            tool_names = {t.name if hasattr(t, "name") else str(t) for t in app._tool_manager.list_tools()}
+            self.assertNotIn("update_managed_file", tool_names)
+            self.assertNotIn("update_managed_file_section", tool_names)
+
+    def test_direct_write_tools_present_when_flag_is_true(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            (root / "AGENTS.md").write_text("# Purpose\nTest\n", encoding="utf-8")
+            config_path = root / "config.yaml"
+            config_path.write_text(
+                f"roots:\n  - {root}\ncache_enabled: false\nallow_direct_writes: true\n",
+                encoding="utf-8",
+            )
+            from mcp_agents_registry.server import create_server
+            app = create_server(str(config_path))
+            tool_names = {t.name if hasattr(t, "name") else str(t) for t in app._tool_manager.list_tools()}
+            self.assertIn("update_managed_file", tool_names)
+            self.assertIn("update_managed_file_section", tool_names)
