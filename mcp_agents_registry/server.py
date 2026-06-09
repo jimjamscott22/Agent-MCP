@@ -19,7 +19,7 @@ from .resources import (
 
 
 def _propose_registry_update(
-    registry: Any,
+    registry: AgentsRegistry,
     target_project: str,
     section_heading: str,
     proposed_content: str,
