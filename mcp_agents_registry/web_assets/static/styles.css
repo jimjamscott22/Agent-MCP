@@ -965,13 +965,13 @@ pre {
 }
 
 /* Review Queue */
-.card { background: var(--bg-card, var(--bg-panel)); border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-bottom: 12px; }
+.card { background: var(--bg-panel); border: 1px solid var(--line); border-radius: 6px; padding: 16px; margin-bottom: 12px; }
 .card-head { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
-.card-rationale { margin: 0 0 10px; font-size: 0.9em; color: var(--fg-muted, #888); }
+.card-rationale { margin: 0 0 10px; font-size: 0.9em; color: var(--ink-dim); }
 .card-actions { display: flex; gap: 8px; margin-top: 10px; }
-.field-label { display: block; font-size: 0.8em; font-weight: 600; color: var(--fg-muted, #888); margin: 8px 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
-.input-heading { width: 100%; padding: 4px 8px; font-size: 0.9em; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-input, var(--bg-panel)); color: var(--fg); }
-.input-content { width: 100%; padding: 6px 8px; font-family: monospace; font-size: 0.85em; border: 1px solid var(--border); border-radius: 4px; resize: vertical; background: var(--bg-input, var(--bg-panel)); color: var(--fg); }
+.field-label { display: block; font-size: 0.8em; font-weight: 600; color: var(--ink-dim); margin: 8px 0 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+.input-heading { width: 100%; padding: 4px 8px; font-size: 0.9em; border: 1px solid var(--line); border-radius: 4px; background: var(--bg-input); color: var(--ink); }
+.input-content { width: 100%; padding: 6px 8px; font-family: monospace; font-size: 0.85em; border: 1px solid var(--line); border-radius: 4px; resize: vertical; background: var(--bg-input); color: var(--ink); }
 .pill-approved { background: var(--green-muted, #d1fae5); color: var(--green-text, #065f46); }
 .pill-rejected { background: var(--red-muted, #fee2e2); color: var(--red-text, #991b1b); }
 .pill-pending { background: var(--blue-muted, #dbeafe); color: var(--blue-text, #1e40af); }

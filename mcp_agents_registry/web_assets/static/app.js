@@ -415,7 +415,7 @@ function renderProposals(proposals) {
         <span class="pill">${escapeHtml(p.target_project)}</span>
         <span class="pill mono-small">${escapeHtml(p.section_heading)}</span>
         ${p.agent_id ? `<span class="pill">agent: ${escapeHtml(p.agent_id)}</span>` : ''}
-        <span class="pill pill-status pill-${p.status}">${p.status}</span>
+        <span class="pill pill-status pill-${escapeHtml(p.status)}">${escapeHtml(p.status)}</span>
       </div>
       <p class="card-rationale"><em>${escapeHtml(p.rationale)}</em></p>
       ${isPending ? `
@@ -430,12 +430,22 @@ function renderProposals(proposals) {
       ` : ''}
     `;
     if (isPending) {
-      li.querySelector('.btn-approve').addEventListener('click', () => approveProposal(p.id, li));
-      li.querySelector('.btn-reject').addEventListener('click', () => rejectProposal(p.id, li));
+      li.querySelector('.btn-approve').addEventListener('click', () => {
+        li.dataset.actioned = '1';
+        approveProposal(p.id, li);
+      });
+      li.querySelector('.btn-reject').addEventListener('click', () => {
+        li.dataset.actioned = '1';
+        rejectProposal(p.id, li);
+      });
       const contentArea = li.querySelector('.input-content');
       const headingInput = li.querySelector('.input-heading');
-      contentArea.addEventListener('blur', () => saveProposalEdits(p.id, headingInput.value, contentArea.value));
-      headingInput.addEventListener('blur', () => saveProposalEdits(p.id, headingInput.value, contentArea.value));
+      contentArea.addEventListener('blur', () => {
+        if (!li.dataset.actioned) saveProposalEdits(p.id, headingInput.value, contentArea.value);
+      });
+      headingInput.addEventListener('blur', () => {
+        if (!li.dataset.actioned) saveProposalEdits(p.id, headingInput.value, contentArea.value);
+      });
     }
     proposalListNode.appendChild(li);
   }
@@ -474,7 +484,6 @@ function updateProposalBadge(count) {
 async function approveProposal(id, liNode) {
   try {
     await callApi(`/api/proposals/${id}/approve`, { method: 'POST' });
-    liNode.remove();
     await loadProposals();
   } catch (err) {
     setStatus('Approve failed: ' + err.message);
@@ -484,7 +493,6 @@ async function approveProposal(id, liNode) {
 async function rejectProposal(id, liNode) {
   try {
     await callApi(`/api/proposals/${id}/reject`, { method: 'POST' });
-    liNode.remove();
     await loadProposals();
   } catch (err) {
     setStatus('Reject failed: ' + err.message);
