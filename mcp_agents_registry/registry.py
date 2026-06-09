@@ -594,17 +594,30 @@ class AgentsRegistry:
         proposal = self.proposal_store.get(proposal_id)
         if proposal is None:
             raise LookupError(f"Proposal not found: {proposal_id}")
-        self.update_managed_file_section(
-            path=proposal.target_path,
-            section_heading=proposal.section_heading,
-            section_content=proposal.proposed_content,
-        )
-        return self.proposal_store.set_status(proposal_id, "approved")
+        if proposal.status != "pending":
+            raise ValueError(
+                f"Cannot approve proposal {proposal_id!r}: current status is {proposal.status!r}."
+            )
+        approved = self.proposal_store.set_status(proposal_id, "approved")
+        try:
+            self.update_managed_file_section(
+                path=proposal.target_path,
+                section_heading=proposal.section_heading,
+                section_content=proposal.proposed_content,
+            )
+        except Exception:
+            self.proposal_store.set_status(proposal_id, "pending")
+            raise
+        return approved
 
     def reject_proposal(self, proposal_id: str) -> MemoryProposal:
         proposal = self.proposal_store.get(proposal_id)
         if proposal is None:
             raise LookupError(f"Proposal not found: {proposal_id}")
+        if proposal.status != "pending":
+            raise ValueError(
+                f"Cannot reject proposal {proposal_id!r}: current status is {proposal.status!r}."
+            )
         return self.proposal_store.set_status(proposal_id, "rejected")
 
     def edit_proposal(
@@ -622,6 +635,8 @@ class AgentsRegistry:
             fields["proposed_content"] = proposed_content
         if section_heading is not None:
             fields["section_heading"] = section_heading
+        if not fields:
+            return proposal
         return self.proposal_store.update(proposal_id, **fields)
 
     def _validate_managed_file_path(self, path: str | Path, *, must_exist: bool) -> Path:

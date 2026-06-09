@@ -224,3 +224,21 @@ class RegistryProposalTests(unittest.TestCase):
     def test_approve_proposal_raises_for_unknown_id(self) -> None:
         with self.assertRaises(LookupError):
             self.registry.approve_proposal("no-such-id")
+
+    def test_approve_proposal_raises_for_already_approved(self) -> None:
+        p = self.registry.add_proposal(
+            target_project=self.project_name, target_path=self.target_path,
+            section_heading="S", proposed_content="c", rationale="r",
+        )
+        self.registry.approve_proposal(p.id)
+        with self.assertRaises(ValueError):
+            self.registry.approve_proposal(p.id)
+
+    def test_reject_proposal_raises_for_already_rejected(self) -> None:
+        p = self.registry.add_proposal(
+            target_project=self.project_name, target_path=self.target_path,
+            section_heading="S", proposed_content="c", rationale="r",
+        )
+        self.registry.reject_proposal(p.id)
+        with self.assertRaises(ValueError):
+            self.registry.reject_proposal(p.id)
