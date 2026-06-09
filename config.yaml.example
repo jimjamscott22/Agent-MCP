@@ -22,3 +22,5 @@ cache_enabled: true
 parse_sections: true
 follow_symlinks: false
 inventory_path: .cache/agents_inventory.json
+allow_direct_writes: false
+proposals_path: .cache/memory_proposals.json
