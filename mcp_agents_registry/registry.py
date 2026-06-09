@@ -9,6 +9,7 @@ from typing import Any
 from .cache import RegistryCache
 from .config import AppConfig, load_config
 from .inventory_store import InventoryStore
+from .proposals import MemoryProposal, ProposalStore
 from .models import (
     AccountRecord,
     CacheEntry,
@@ -35,6 +36,7 @@ class AgentsRegistry:
         self.devices: dict[str, DeviceRecord] = {}
         self.installations: list[InstallationRecord] = []
         self._load_inventory()
+        self.proposal_store = ProposalStore(config.proposals_path)
         self.resolver = ContextResolver(config)
         self.projects: list[ProjectRecord] = []
         self.projects_by_name: dict[str, ProjectRecord] = {}
@@ -565,6 +567,62 @@ class AgentsRegistry:
         payload["account"] = account.to_dict() if account else {"account_id": item.account_id}
         payload["device"] = device.to_dict() if device else {"device_id": item.device_id}
         return payload
+
+    def add_proposal(
+        self,
+        *,
+        target_project: str,
+        target_path: str,
+        section_heading: str,
+        proposed_content: str,
+        rationale: str,
+        agent_id: str = "",
+    ) -> MemoryProposal:
+        return self.proposal_store.add(
+            target_project=target_project,
+            target_path=target_path,
+            section_heading=section_heading,
+            proposed_content=proposed_content,
+            rationale=rationale,
+            agent_id=agent_id,
+        )
+
+    def list_proposals(self, *, status: str | None = None) -> list[MemoryProposal]:
+        return self.proposal_store.list(status=status)
+
+    def approve_proposal(self, proposal_id: str) -> MemoryProposal:
+        proposal = self.proposal_store.get(proposal_id)
+        if proposal is None:
+            raise LookupError(f"Proposal not found: {proposal_id}")
+        self.update_managed_file_section(
+            path=proposal.target_path,
+            section_heading=proposal.section_heading,
+            section_content=proposal.proposed_content,
+        )
+        return self.proposal_store.set_status(proposal_id, "approved")
+
+    def reject_proposal(self, proposal_id: str) -> MemoryProposal:
+        proposal = self.proposal_store.get(proposal_id)
+        if proposal is None:
+            raise LookupError(f"Proposal not found: {proposal_id}")
+        return self.proposal_store.set_status(proposal_id, "rejected")
+
+    def edit_proposal(
+        self,
+        proposal_id: str,
+        *,
+        proposed_content: str | None = None,
+        section_heading: str | None = None,
+    ) -> MemoryProposal:
+        proposal = self.proposal_store.get(proposal_id)
+        if proposal is None:
+            raise LookupError(f"Proposal not found: {proposal_id}")
+        fields: dict[str, str] = {}
+        if proposed_content is not None:
+            fields["proposed_content"] = proposed_content
+        if section_heading is not None:
+            fields["section_heading"] = section_heading
+        return self.proposal_store.update(proposal_id, **fields)
 
     def _validate_managed_file_path(self, path: str | Path, *, must_exist: bool) -> Path:
         normalized_path = normalize_user_path(path, follow_symlinks=self.config.follow_symlinks)

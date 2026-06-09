@@ -153,3 +153,74 @@ class ConfigProposalsTests(unittest.TestCase):
                 config_path=Path(temp_dir) / "config.yaml",
             )
             self.assertTrue(config.allow_direct_writes)
+
+
+class RegistryProposalTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        root = Path(self._tmp.name)
+        (root / "AGENTS.md").write_text("# Purpose\nTest workspace\n", encoding="utf-8")
+        config_path = root / "config.yaml"
+        config_path.write_text(
+            f"roots:\n  - {root}\ncache_enabled: false\nparse_sections: true\n",
+            encoding="utf-8",
+        )
+        from mcp_agents_registry.registry import AgentsRegistry
+        self.registry = AgentsRegistry.from_config_path(str(config_path))
+        self.registry.refresh_index()
+        self.project_name = self.registry.list_projects()[0]["project_name"]
+        self.target_path = self.registry.projects_by_name[self.project_name].agent_file_path
+
+    def tearDown(self) -> None:
+        self._tmp.cleanup()
+
+    def test_add_proposal_returns_pending_proposal(self) -> None:
+        p = self.registry.add_proposal(
+            target_project=self.project_name,
+            target_path=self.target_path,
+            section_heading="Notes",
+            proposed_content="- new note\n",
+            rationale="useful",
+        )
+        self.assertEqual(p.status, "pending")
+        self.assertEqual(p.target_project, self.project_name)
+
+    def test_list_proposals_returns_all_by_default(self) -> None:
+        self.registry.add_proposal(
+            target_project=self.project_name, target_path=self.target_path,
+            section_heading="S", proposed_content="c", rationale="r",
+        )
+        self.assertEqual(len(self.registry.list_proposals()), 1)
+
+    def test_list_proposals_filters_by_status(self) -> None:
+        p = self.registry.add_proposal(
+            target_project=self.project_name, target_path=self.target_path,
+            section_heading="S", proposed_content="c", rationale="r",
+        )
+        self.registry.reject_proposal(p.id)
+        self.assertEqual(len(self.registry.list_proposals(status="pending")), 0)
+        self.assertEqual(len(self.registry.list_proposals(status="rejected")), 1)
+
+    def test_approve_proposal_writes_file_and_marks_approved(self) -> None:
+        p = self.registry.add_proposal(
+            target_project=self.project_name, target_path=self.target_path,
+            section_heading="Test Notes",
+            proposed_content="- approved content\n",
+            rationale="needed",
+        )
+        approved = self.registry.approve_proposal(p.id)
+        self.assertEqual(approved.status, "approved")
+        content = Path(self.target_path).read_text(encoding="utf-8")
+        self.assertIn("approved content", content)
+
+    def test_edit_proposal_updates_content(self) -> None:
+        p = self.registry.add_proposal(
+            target_project=self.project_name, target_path=self.target_path,
+            section_heading="Notes", proposed_content="old\n", rationale="r",
+        )
+        updated = self.registry.edit_proposal(p.id, proposed_content="new\n", section_heading="Notes")
+        self.assertEqual(updated.proposed_content, "new\n")
+
+    def test_approve_proposal_raises_for_unknown_id(self) -> None:
+        with self.assertRaises(LookupError):
+            self.registry.approve_proposal("no-such-id")
