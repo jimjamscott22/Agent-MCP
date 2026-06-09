@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from .proposals import MemoryProposal
 from .registry import AgentsRegistry
 from .utils import decode_resource_path, to_pretty_json
 
