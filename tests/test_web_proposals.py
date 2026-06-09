@@ -105,3 +105,15 @@ class ProposalWebTests(unittest.TestCase):
     def test_patch_proposal_unknown_id_returns_404(self) -> None:
         resp = self.client.patch("/api/proposals/no-such-id", json={"proposed_content": "x"})
         self.assertEqual(resp.status_code, 404)
+
+    def test_approve_already_approved_returns_400(self) -> None:
+        proposal_id = self._add_proposal()["proposal_id"]
+        self.client.post(f"/api/proposals/{proposal_id}/approve")
+        resp = self.client.post(f"/api/proposals/{proposal_id}/approve")
+        self.assertEqual(resp.status_code, 400)
+
+    def test_reject_already_rejected_returns_400(self) -> None:
+        proposal_id = self._add_proposal()["proposal_id"]
+        self.client.post(f"/api/proposals/{proposal_id}/reject")
+        resp = self.client.post(f"/api/proposals/{proposal_id}/reject")
+        self.assertEqual(resp.status_code, 400)

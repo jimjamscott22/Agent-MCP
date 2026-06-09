@@ -110,8 +110,6 @@ def create_web_app(config_path: str | None = None) -> Any:
             ).to_dict()
         except LookupError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
-        except ValueError as exc:
-            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
     @app.get("/api/accounts")
     def list_accounts() -> dict[str, object]:
