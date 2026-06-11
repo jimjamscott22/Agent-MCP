@@ -53,6 +53,11 @@
       <a href="#sec-fleet" class="nav-item"><span class="num">03</span><span>Accounts &amp; Devices</span></a>
       <a href="#sec-install" class="nav-item"><span class="num">04</span><span>Installations</span></a>
       <a href="#sec-editor" class="nav-item"><span class="num">05</span><span>Editor</span></a>
+      <a href="#sec-proposals" class="nav-item" id="nav-proposals">
+        <span class="num">06</span>
+        <span>Review Queue</span>
+        <span class="badge" id="proposalBadge" style="display:none"></span>
+      </a>
       <div class="sidenav-foot">
         <div class="legend"><span class="dot dot-ok"></span>Online</div>
         <div class="legend mono-small">Hierarchy merge</div>
@@ -177,6 +182,26 @@
           <button id="whereAgentBtn" class="secondary">Where is this agent?</button>
           <button id="skillsBtn" class="secondary">Skills on account/device</button>
         </div>
+      </div>
+    </section>
+
+    <section id="sec-proposals" class="panel">
+      <header class="panel-head">
+        <div class="panel-title">
+          <span class="panel-num">06</span>
+          <h2>Review Queue</h2>
+        </div>
+        <span class="panel-tag">Memory proposals</span>
+      </header>
+      <div class="panel-body">
+        <div class="toolbar">
+          <label>
+            <input type="checkbox" id="showHistory" />
+            Show approved/rejected history
+          </label>
+        </div>
+        <ul id="proposalList" class="item-list"></ul>
+        <p id="proposalEmpty" style="display:none; color: var(--fg-muted);">No pending proposals.</p>
       </div>
     </section>
   </main>

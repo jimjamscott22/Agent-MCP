@@ -55,3 +55,8 @@ def device_inventory_resource_payload(registry: AgentsRegistry, device_id: str) 
 
 def managed_files_resource_payload(registry: AgentsRegistry) -> str:
     return to_pretty_json({"files": registry.list_managed_files()})
+
+
+def proposals_resource_payload(registry: AgentsRegistry) -> str:
+    proposals = registry.list_proposals()
+    return to_pretty_json({"proposals": [p.to_dict() for p in proposals]})
