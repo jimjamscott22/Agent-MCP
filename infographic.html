@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>mcp-agents-registry — How It Works</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222536;
+    --border: #2e3348;
+    --accent: #7c6fff;
+    --accent2: #4fc3f7;
+    --accent3: #81d4fa;
+    --green: #69db7c;
+    --yellow: #ffd43b;
+    --orange: #ff922b;
+    --red: #ff6b6b;
+    --text: #e8eaf0;
+    --muted: #8b92a8;
+    --arrow: #4a5278;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 32px 24px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 36px;
+  }
+
+  /* ── SECTION LABEL ── */
+  .section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+    padding-left: 4px;
+  }
+
+  /* ── PIPELINE ── */
+  .pipeline-row {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 40px;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .pipeline-step {
+    flex: 1;
+    min-width: 100px;
+    max-width: 160px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 12px;
+    text-align: center;
+    position: relative;
+  }
+
+  .pipeline-step .step-icon {
+    font-size: 22px;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .pipeline-step .step-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .pipeline-step .step-mod {
+    font-size: 10px;
+    color: var(--accent);
+    font-family: monospace;
+    background: #1e1e35;
+    border-radius: 4px;
+    padding: 1px 5px;
+    display: inline-block;
+    margin-bottom: 5px;
+  }
+
+  .pipeline-step .step-desc {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .pipeline-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    color: var(--accent);
+    font-size: 18px;
+    align-self: center;
+  }
+
+  /* ── TWO-COLUMN LAYOUT ── */
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  @media (max-width: 780px) {
+    .two-col { grid-template-columns: 1fr; }
+    .three-col { grid-template-columns: 1fr !important; }
+  }
+
+  .three-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  /* ── CARD ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+  }
+
+  .card-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .card-title .icon { font-size: 15px; }
+
+  /* ── MODULE GRID ── */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .module-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    border-left: 3px solid var(--accent);
+  }
+
+  .module-card.green  { border-left-color: var(--green); }
+  .module-card.yellow { border-left-color: var(--yellow); }
+  .module-card.orange { border-left-color: var(--orange); }
+  .module-card.red    { border-left-color: var(--red); }
+  .module-card.blue   { border-left-color: var(--accent2); }
+  .module-card.purple { border-left-color: var(--accent); }
+
+  .module-name {
+    font-family: monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .module-role {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── FLOW DIAGRAM ── */
+  .flow-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 28px;
+  }
+
+  .flow-steps {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .flow-node {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    text-align: center;
+    min-width: 120px;
+    max-width: 150px;
+  }
+
+  .flow-node .fn-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .flow-node .fn-sub {
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--accent);
+    padding: 0 4px;
+    font-size: 16px;
+    align-self: center;
+  }
+
+  /* ── MERGE RULES TABLE ── */
+  .merge-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+
+  .merge-table th {
+    text-align: left;
+    padding: 6px 10px;
+    color: var(--muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .merge-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #1e2133;
+    vertical-align: top;
+  }
+
+  .merge-table tr:last-child td { border-bottom: none; }
+
+  .badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .badge-nearest  { background: #2a1f5e; color: var(--accent); }
+  .badge-combine  { background: #1a3a28; color: var(--green); }
+  .badge-keyed    { background: #3a2a12; color: var(--yellow); }
+  .badge-dedup    { background: #1a2f3a; color: var(--accent2); }
+
+  /* ── TOOL/RESOURCE LIST ── */
+  .tool-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .tool-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    font-size: 12px;
+  }
+
+  .tool-list li .tool-name {
+    font-family: monospace;
+    color: var(--accent2);
+    font-size: 11.5px;
+    white-space: nowrap;
+  }
+
+  .tool-list li .tool-desc {
+    color: var(--muted);
+    font-size: 11px;
+  }
+
+  .resource-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .resource-list li {
+    font-family: monospace;
+    font-size: 11px;
+    color: var(--accent);
+    padding: 4px 8px;
+    background: #1a1e35;
+    border-radius: 4px;
+  }
+
+  /* ── STORAGE CARDS ── */
+  .storage-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+
+  .storage-card {
+    flex: 1;
+    min-width: 180px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .storage-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .storage-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+
+  .storage-path {
+    font-family: monospace;
+    font-size: 10px;
+    color: var(--accent);
+    background: #1a1e35;
+    border-radius: 3px;
+    padding: 1px 5px;
+    display: inline-block;
+    margin-bottom: 4px;
+  }
+
+  .storage-desc {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── DUAL INTERFACE ── */
+  .dual-interface {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  .iface-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    border-top: 3px solid var(--accent);
+  }
+
+  .iface-card.http { border-top-color: var(--accent2); }
+
+  .iface-title {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* ── SECURITY CARD ── */
+  .safety-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+
+  .safety-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--green);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .safety-item strong { color: var(--green); display: block; margin-bottom: 2px; font-size: 12px; }
+
+  /* ── DIVIDER ── */
+  .section-divider {
+    margin: 32px 0 20px;
+    border: none;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── SCORE TABLE ── */
+  .score-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+  }
+
+  .score-label {
+    width: 110px;
+    color: var(--muted);
+    text-align: right;
+    flex-shrink: 0;
+    font-family: monospace;
+  }
+
+  .score-bar-bg {
+    flex: 1;
+    height: 10px;
+    background: var(--surface2);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 5px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+  }
+
+  .score-val {
+    width: 24px;
+    text-align: right;
+    color: var(--text);
+    font-weight: 600;
+    font-family: monospace;
+    font-size: 11px;
+  }
+
+  .tip {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<h1>mcp-agents-registry</h1>
+<p class="subtitle">A Python MCP server that discovers, indexes, and resolves hierarchical AGENTS.md / CLAUDE.md files across a codebase.</p>
+
+<!-- ═══════════════════════════════════════════════ PIPELINE ═══ -->
+<div class="section-label">Core Pipeline</div>
+<div class="pipeline-row">
+
+  <div class="pipeline-step">
+    <span class="step-icon">📂</span>
+    <div class="step-name">Scan</div>
+    <div class="step-mod">scanner.py</div>
+    <div class="step-desc">Walk configured roots, find agent files, compute SHA256 + mtime</div>
+  </div>
+
+  <div class="pipeline-arrow">›</div>
+
+  <div class="pipeline-step">
+    <span class="step-icon">🔍</span>
+    <div class="step-name">Parse</div>
+    <div class="step-mod">parser.py</div>
+    <div class="step-desc">Extract structured sections from markdown headings</div>
+  </div>
+
+  <div class="pipeline-arrow">›</div>
+
+  <div class="pipeline-step">
+    <span class="step-icon">💾</span>
+    <div class="step-name">Cache</div>
+    <div class="step-mod">cache.py</div>
+    <div class="step-desc">Skip re-parsing unchanged files using signature validation</div>
+  </div>
+
+  <div class="pipeline-arrow">›</div>
+
+  <div class="pipeline-step">
+    <span class="step-icon">🗂️</span>
+    <div class="step-name">Index</div>
+    <div class="step-mod">registry.py</div>
+    <div class="step-desc">Build project records, assign names, link parent–child relations</div>
+  </div>
+
+  <div class="pipeline-arrow">›</div>
+
+  <div class="pipeline-step">
+    <span class="step-icon">🔀</span>
+    <div class="step-name">Resolve</div>
+    <div class="step-mod">resolver.py</div>
+    <div class="step-desc">Merge ancestor contexts for a target path using hierarchy rules</div>
+  </div>
+
+  <div class="pipeline-arrow">›</div>
+
+  <div class="pipeline-step">
+    <span class="step-icon">📡</span>
+    <div class="step-name">Serve</div>
+    <div class="step-mod">server.py</div>
+    <div class="step-desc">Expose results via MCP tools + resources and REST admin API</div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════ MODULE MAP ═══ -->
+<div class="section-label">Module Responsibilities</div>
+<div class="module-grid">
+  <div class="module-card purple">
+    <div class="module-name">server.py</div>
+    <div class="module-role">MCP entry point — registers tools, resources &amp; prompts; runs FastMCP</div>
+  </div>
+  <div class="module-card orange">
+    <div class="module-name">registry.py</div>
+    <div class="module-role">Central orchestrator — project CRUD, inventory, managed file writes</div>
+  </div>
+  <div class="module-card blue">
+    <div class="module-name">resolver.py</div>
+    <div class="module-role">Finds ancestor projects for a path and merges their sections</div>
+  </div>
+  <div class="module-card green">
+    <div class="module-name">scanner.py</div>
+    <div class="module-role">Walks filesystem; discovers agent files with metadata</div>
+  </div>
+  <div class="module-card yellow">
+    <div class="module-name">parser.py</div>
+    <div class="module-role">Converts raw markdown into canonical section dataclass</div>
+  </div>
+  <div class="module-card red">
+    <div class="module-name">cache.py</div>
+    <div class="module-role">JSON cache keyed by file path; validates SHA256 + size + mtime</div>
+  </div>
+  <div class="module-card blue">
+    <div class="module-name">config.py</div>
+    <div class="module-role">Loads &amp; validates YAML config; produces AppConfig dataclass</div>
+  </div>
+  <div class="module-card purple">
+    <div class="module-name">models.py</div>
+    <div class="module-role">All dataclasses: ProjectRecord, EffectiveContext, InventoryRecord…</div>
+  </div>
+  <div class="module-card green">
+    <div class="module-name">web.py</div>
+    <div class="module-role">FastAPI admin server — REST endpoints + serves static UI</div>
+  </div>
+  <div class="module-card orange">
+    <div class="module-name">inventory_store.py</div>
+    <div class="module-role">Persists accounts / devices / installations as JSON with integrity checks</div>
+  </div>
+  <div class="module-card blue">
+    <div class="module-name">resources.py</div>
+    <div class="module-role">Builds read-only MCP resource payloads (agents:// URIs)</div>
+  </div>
+  <div class="module-card yellow">
+    <div class="module-name">utils.py</div>
+    <div class="module-role">Path normalization, SHA256 hashing, URL encoding helpers</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ CONTEXT RESOLUTION ═══ -->
+<hr class="section-divider" />
+<div class="section-label">Context Resolution — how ancestor contexts are merged</div>
+
+<div class="flow-container">
+  <div class="flow-steps">
+    <div class="flow-node">
+      <div class="fn-label">Input path</div>
+      <div class="fn-sub">e.g. /repo/services/api/foo.py</div>
+    </div>
+    <div class="flow-arrow">›</div>
+    <div class="flow-node">
+      <div class="fn-label">Normalize &amp; validate</div>
+      <div class="fn-sub">Must be inside a configured root; reject traversal</div>
+    </div>
+    <div class="flow-arrow">›</div>
+    <div class="flow-node">
+      <div class="fn-label">Find ancestors</div>
+      <div class="fn-sub">All projects whose root is a prefix of the path</div>
+    </div>
+    <div class="flow-arrow">›</div>
+    <div class="flow-node">
+      <div class="fn-label">Sort by depth</div>
+      <div class="fn-sub">Shallowest (broadest) first</div>
+    </div>
+    <div class="flow-arrow">›</div>
+    <div class="flow-node">
+      <div class="fn-label">Merge sections</div>
+      <div class="fn-sub">Per-field strategy (see table)</div>
+    </div>
+    <div class="flow-arrow">›</div>
+    <div class="flow-node">
+      <div class="fn-label">EffectiveContext</div>
+      <div class="fn-sub">Merged fields + raw combined markdown + resolution trace</div>
+    </div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="card-title"><span class="icon">⚖️</span> Section Merge Rules</div>
+    <table class="merge-table">
+      <thead>
+        <tr>
+          <th>Section(s)</th>
+          <th>Strategy</th>
+          <th>Behaviour</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>purpose, overview</td>
+          <td><span class="badge badge-nearest">nearest wins</span></td>
+          <td style="color:var(--muted);font-size:11px">Deepest non-empty value replaces all parents</td>
+        </tr>
+        <tr>
+          <td>stack, commands, setup, constraints, architecture, notes, testing</td>
+          <td><span class="badge badge-combine">combine + dedup</span></td>
+          <td style="color:var(--muted);font-size:11px">All items merged; order preserved; duplicates removed</td>
+        </tr>
+        <tr>
+          <td>coding_rules, definition_of_done</td>
+          <td><span class="badge badge-keyed">keyed merge</span></td>
+          <td style="color:var(--muted);font-size:11px">Narrower scope overwrites broader scope per key</td>
+        </tr>
+        <tr>
+          <td>tags</td>
+          <td><span class="badge badge-dedup">combined + dedup</span></td>
+          <td style="color:var(--muted);font-size:11px">All tags from all ancestors, deduplicated</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🌲</span> Hierarchy Example</div>
+    <pre style="font-size:11px;color:var(--muted);line-height:1.8">
+/repo/                     ← AGENTS.md  (depth 1)
+  services/                ← AGENTS.md  (depth 2)
+    api/                   ← AGENTS.md  (depth 3)
+      foo.py               ← <span style="color:var(--accent2)">target path</span>
+
+Resolution trace for foo.py:
+  1. /repo/AGENTS.md       (broadest)
+  2. /repo/services/AGENTS.md
+  3. /repo/services/api/AGENTS.md  (narrowest → wins scalars)
+
+<span style="color:var(--green)">purpose</span>: taken from depth-3 file if present
+<span style="color:var(--yellow)">commands</span>: union of all three files (deduped)
+<span style="color:var(--accent)">coding_rules</span>: deeper keys overwrite shallower
+    </pre>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ DUAL INTERFACE ═══ -->
+<hr class="section-divider" />
+<div class="section-label">Dual Interfaces</div>
+
+<div class="dual-interface">
+  <div class="iface-card">
+    <div class="iface-title"><span>🤖</span> MCP Interface <span style="font-size:11px;color:var(--muted);font-weight:400">(stdio / Claude clients)</span></div>
+
+    <div class="section-label" style="margin-bottom:8px">31 Tools (selection)</div>
+    <ul class="tool-list">
+      <li><span class="tool-name">resolve_context(path)</span><span class="tool-desc">→ merged context for any path</span></li>
+      <li><span class="tool-name">list_projects()</span><span class="tool-desc">→ all indexed projects</span></li>
+      <li><span class="tool-name">search_projects(query)</span><span class="tool-desc">→ weighted full-text search</span></li>
+      <li><span class="tool-name">refresh_index()</span><span class="tool-desc">→ rescan roots, report changes</span></li>
+      <li><span class="tool-name">create/update/delete_account()</span><span class="tool-desc">→ inventory CRUD</span></li>
+      <li><span class="tool-name">assign_agent_installation()</span><span class="tool-desc">→ track where agents are deployed</span></li>
+      <li><span class="tool-name">update_managed_file()</span><span class="tool-desc">→ atomic write with SHA256 check</span></li>
+      <li><span class="tool-name">update_managed_file_section()</span><span class="tool-desc">→ section-aware upsert</span></li>
+    </ul>
+
+    <div class="section-label" style="margin-top:14px;margin-bottom:8px">8 Resources (agents:// URIs)</div>
+    <ul class="resource-list">
+      <li>agents://projects</li>
+      <li>agents://project/{name}</li>
+      <li>agents://project/{name}/raw</li>
+      <li>agents://project/{name}/effective</li>
+      <li>agents://path/{encoded_path}</li>
+      <li>agents://inventory</li>
+      <li>agents://inventory/account/{id}</li>
+      <li>agents://managed-files</li>
+    </ul>
+
+    <div class="section-label" style="margin-top:14px;margin-bottom:8px">2 Prompt Templates</div>
+    <ul class="tool-list">
+      <li><span class="tool-name">explain_path_context</span><span class="tool-desc">→ resolve + summarise a path</span></li>
+      <li><span class="tool-name">summarize_project</span><span class="tool-desc">→ inspect project details</span></li>
+    </ul>
+  </div>
+
+  <div class="iface-card http">
+    <div class="iface-title"><span>🌐</span> Admin Web UI <span style="font-size:11px;color:var(--muted);font-weight:400">(FastAPI + browser)</span></div>
+
+    <div class="section-label" style="margin-bottom:8px">REST API Endpoints</div>
+    <ul class="tool-list">
+      <li><span class="tool-name">GET /api/projects</span><span class="tool-desc">list all projects</span></li>
+      <li><span class="tool-name">GET /api/search?query=</span><span class="tool-desc">full-text search</span></li>
+      <li><span class="tool-name">GET /api/context?path=</span><span class="tool-desc">resolve path context</span></li>
+      <li><span class="tool-name">POST /api/refresh</span><span class="tool-desc">trigger index refresh</span></li>
+      <li><span class="tool-name">CRUD /api/accounts</span><span class="tool-desc">account management</span></li>
+      <li><span class="tool-name">CRUD /api/devices</span><span class="tool-desc">device management</span></li>
+      <li><span class="tool-name">CRUD /api/installations</span><span class="tool-desc">agent placement tracking</span></li>
+      <li><span class="tool-name">GET /api/inventory/coverage</span><span class="tool-desc">unassigned/unused stats</span></li>
+      <li><span class="tool-name">GET /api/files/read</span><span class="tool-desc">read managed file + SHA256</span></li>
+      <li><span class="tool-name">PUT /api/files/write</span><span class="tool-desc">atomic write with lock</span></li>
+      <li><span class="tool-name">PUT /api/files/write-section</span><span class="tool-desc">section-level edit</span></li>
+    </ul>
+
+    <div class="section-label" style="margin-top:14px;margin-bottom:8px">UI Panels</div>
+    <ul class="tool-list">
+      <li><span class="tool-name" style="color:var(--accent)">Registry Panel</span><span class="tool-desc">search, refresh, browse projects</span></li>
+      <li><span class="tool-name" style="color:var(--accent)">Inspector Panel</span><span class="tool-desc">resolve context for any path</span></li>
+      <li><span class="tool-name" style="color:var(--accent)">Accounts &amp; Devices</span><span class="tool-desc">create &amp; manage inventory entries</span></li>
+      <li><span class="tool-name" style="color:var(--accent)">Installations</span><span class="tool-desc">track where each agent runs</span></li>
+      <li><span class="tool-name" style="color:var(--accent)">Managed Files</span><span class="tool-desc">read / edit AGENTS.md &amp; CLAUDE.md</span></li>
+    </ul>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ STORAGE ═══ -->
+<hr class="section-divider" />
+<div class="section-label">Storage Backends</div>
+
+<div class="storage-row">
+  <div class="storage-card">
+    <div class="storage-icon">📁</div>
+    <div>
+      <div class="storage-title">Source Files</div>
+      <div class="storage-path">AGENTS.md / CLAUDE.md</div>
+      <div class="storage-desc">Living markdown files scattered across the codebase. The source of truth for all context. Written via managed file tools with atomic rename.</div>
+    </div>
+  </div>
+
+  <div class="storage-card">
+    <div class="storage-icon">⚡</div>
+    <div>
+      <div class="storage-title">Parse Cache</div>
+      <div class="storage-path">.cache/agents_registry_cache.json</div>
+      <div class="storage-desc">JSON map from file path → parsed sections. Skips parsing when SHA256 + mtime + size are unchanged. Includes a version field for schema upgrades.</div>
+    </div>
+  </div>
+
+  <div class="storage-card">
+    <div class="storage-icon">📋</div>
+    <div>
+      <div class="storage-title">Inventory Store</div>
+      <div class="storage-path">.cache/agents_inventory.json</div>
+      <div class="storage-desc">Accounts, devices, and agent installations. Atomic writes via temp-rename. Referential integrity enforced. Versioned schema (v1).</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SEARCH ═══ -->
+<hr class="section-divider" />
+<div class="section-label">Search Scoring Weights (AND logic — all terms must match)</div>
+
+<div class="card" style="max-width:480px;margin-bottom:28px">
+  <div class="score-bar-row">
+    <div class="score-label">project name</div>
+    <div class="score-bar-bg"><div class="score-bar-fill" style="width:100%"></div></div>
+    <div class="score-val">12</div>
+  </div>
+  <div class="score-bar-row">
+    <div class="score-label">root path</div>
+    <div class="score-bar-bg"><div class="score-bar-fill" style="width:66%"></div></div>
+    <div class="score-val">8</div>
+  </div>
+  <div class="score-bar-row">
+    <div class="score-label">agent file path</div>
+    <div class="score-bar-bg"><div class="score-bar-fill" style="width:66%"></div></div>
+    <div class="score-val">8</div>
+  </div>
+  <div class="score-bar-row">
+    <div class="score-label">tags</div>
+    <div class="score-bar-bg"><div class="score-bar-fill" style="width:50%"></div></div>
+    <div class="score-val">6</div>
+  </div>
+  <div class="score-bar-row">
+    <div class="score-label">summary</div>
+    <div class="score-bar-bg"><div class="score-bar-fill" style="width:41%"></div></div>
+    <div class="score-val">5</div>
+  </div>
+  <div class="score-bar-row">
+    <div class="score-label">raw markdown</div>
+    <div class="score-bar-bg"><div class="score-bar-fill" style="width:16%"></div></div>
+    <div class="score-val">2</div>
+  </div>
+  <div class="tip">All query terms must match at least one field (AND logic). Score is cumulative across matching fields.</div>
+</div>
+
+<!-- ═══════════════════════════════════════════ SAFETY ═══ -->
+<hr class="section-divider" />
+<div class="section-label">Safety &amp; Performance Features</div>
+
+<div class="safety-grid">
+  <div class="safety-item">
+    <strong>Path Traversal Prevention</strong>
+    All paths normalized and validated to stay inside configured roots.
+  </div>
+  <div class="safety-item">
+    <strong>SHA256 Concurrency Lock</strong>
+    Managed file writes accept an expected_sha256; mismatches are rejected (optimistic lock).
+  </div>
+  <div class="safety-item">
+    <strong>Atomic File Writes</strong>
+    All writes go to a temp file first, then renamed — no partial writes.
+  </div>
+  <div class="safety-item">
+    <strong>Parse Caching</strong>
+    Files unchanged since last scan are read from cache, not re-parsed — fast refreshes.
+  </div>
+  <div class="safety-item">
+    <strong>Referential Integrity</strong>
+    Installations must reference valid account_id and device_id; orphan prevention on delete.
+  </div>
+  <div class="safety-item">
+    <strong>Symlink Safety</strong>
+    follow_symlinks defaults to false; opt-in only to prevent escaping roots.
+  </div>
+</div>
+
+<div class="footer">
+  mcp-agents-registry · MIT License · pipeline: scan → parse → cache → index → resolve → serve
+</div>
+
+</body>
+</html>
