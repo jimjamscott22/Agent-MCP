@@ -134,39 +134,90 @@
             font-size: 16pt;
             color: #94a3b8;
         }
+        .task-list li.done::before {
+            content: '☑';
+            color: #16a34a;
+        }
+        .task-list li.partial::before {
+            content: '◩';
+            color: #ca8a04;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 12px;
+            margin: 20px 0;
+        }
+        .status-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 14px 16px;
+            background: #f8fafc;
+        }
+        .status-card strong {
+            display: block;
+            color: #0f172a;
+            margin-bottom: 4px;
+        }
+        .status-card span {
+            font-size: 10pt;
+            color: #64748b;
+        }
+        .tag.done { background-color: #dcfce7; color: #166534; }
+        .tag.partial { background-color: #fef9c3; color: #854d0e; }
+        .tag.todo { background-color: #fee2e2; color: #991b1b; }
     </style>
 </head>
 <body>
     <div class="document">
-        <h1>Agent-MCP Implementation Plan</h1>
-        <div class="subtitle">Human-in-the-Loop Memory Updates & Web UI Integration</div>
+        <h1>Agent-MCP Working Implementation Plan</h1>
+        <div class="subtitle">Canonical plan for human-in-the-loop memory updates, proposal review, resolver directives, and web UI integration</div>
 
-        <p>This document outlines the technical strategy for extending <strong>Agent-MCP</strong> with a human-in-the-loop memory curation system. By shifting away from autonomous, direct file writes, this architecture allows agents to propose context updates (rules, architectural decisions, solved bugs) which are then queued for manual user approval via the local Admin Web UI.</p>
+        <div class="callout">
+            <h4>Working Document Status</h4>
+            <p>This HTML file is the canonical working plan for the human-in-the-loop memory proposal feature. The markdown design spec under <code>docs/superpowers/specs/</code> remains useful background, but this document is the master backlog. Where the older HTML plan and markdown spec disagreed, this version keeps the broader HTML scope and the repo-accurate implementation details from the markdown spec.</p>
+            <p><strong>Last reconciled:</strong> 2026-06-21. Targeted proposal tests were passing at reconciliation time: <code>uv run pytest tests/test_proposals.py tests/test_web_proposals.py -q</code>.</p>
+        </div>
+
+        <p>This document outlines the technical strategy for extending <strong>Agent-MCP</strong> with a human-in-the-loop memory curation system. By shifting away from autonomous, direct file writes, this architecture allows agents to propose context updates (rules, architectural decisions, solved bugs) which are queued for manual user approval via the local Admin Web UI.</p>
+
+        <div class="status-grid">
+            <div class="status-card"><strong>Core proposal queue</strong><span>Mostly implemented: data model, MCP tool, routes, UI, and tests exist.</span></div>
+            <div class="status-card"><strong>Resolver directive</strong><span>Partially implemented: exposed as prompt/resource, not injected into resolved context.</span></div>
+            <div class="status-card"><strong>Operational hardening</strong><span>Remaining: file locking, stricter patch rules, docs/config cleanup, optional watchdog.</span></div>
+        </div>
 
         <h2>1. The Proposal Pipeline Architecture</h2>
-        <p>Currently, the <code>AgentsRegistry</code> supports direct file editing. We will introduce a staging layer called the <strong>Proposal Queue</strong>. This queue will temporarily hold agent-generated markdown chunks until the user formally approves them, at which point they are merged into the target <code>AGENTS.md</code> file.</p>
+        <p>The <code>AgentsRegistry</code> supports managed file editing. The proposal feature adds a staging layer called the <strong>Proposal Queue</strong>. This queue holds agent-generated markdown chunks until the user approves them, at which point they are merged into the target <code>AGENTS.md</code> or compatible managed instruction file.</p>
         
         <div class="callout">
             <h4>Architectural Shift</h4>
-            <p>Instead of <code>update_managed_file_section</code>, agents will exclusively use a new tool: <code>propose_registry_update</code>. The server will write these proposals to a local SQLite database or JSON file (e.g., <code>.cache/memory_proposals.json</code>) and instantly surface them in the Web UI.</p>
+            <p>Agents should use <code>propose_registry_update</code> for memory updates. Direct write tools are available only when <code>allow_direct_writes: true</code>. The proposal queue is JSON-backed at <code>.cache/memory_proposals.json</code>, matching the current repo style and avoiding a new SQLite dependency.</p>
         </div>
 
         <h2>2. Data Models & Schemas</h2>
-        <p>A new internal model is required to track the lifecycle of a memory proposal.</p>
+        <p>The proposal model uses <code>@dataclass</code>, matching the existing model style in this repository. Pydantic is not required for this feature.</p>
         
-        <pre><code>from pydantic import BaseModel
-from typing import Optional, Literal
-from datetime import datetime
+        <pre><code>@dataclass(slots=True)
+class MemoryProposal:
+    id: str                    # UUID4 string
+    target_project: str        # project_name from registry
+    target_path: str           # absolute AGENTS.md/CLAUDE.md path to modify
+    section_heading: str       # e.g. "Coding Rules", "Notes"
+    proposed_content: str      # markdown body for the section
+    rationale: str             # why the agent thinks this should be saved
+    status: str                # "pending", "approved", or "rejected"
+    created_at: str            # ISO-8601 UTC
+    resolved_at: str | None    # ISO-8601 UTC or None
+    agent_id: str              # optional inventory/agent identifier</code></pre>
 
-class MemoryProposal(BaseModel):
-    id: str                    # Unique UUID
-    target_project: str        # e.g., "frontend" or root path
-    section_heading: str       # e.g., "Coding Rules", "Notes"
-    proposed_content: str      # The markdown payload
-    rationale: str             # Why the agent thinks this should be saved
-    status: Literal["pending", "approved", "rejected"] = "pending"
-    created_at: datetime
-    agent_id: Optional[str]    # Ties into the Inventory system</code></pre>
+        <h3>Storage Requirements</h3>
+        <ul>
+            <li>Persist proposals to <code>.cache/memory_proposals.json</code>.</li>
+            <li>Use a JSON envelope: <code>{"version": 1, "proposals": [...]}</code>.</li>
+            <li>Use atomic writes and add read-modify-write locking so concurrent proposal submissions cannot drop data.</li>
+            <li>Only allow mutable fields to be changed after creation: <code>section_heading</code>, <code>proposed_content</code>, and internal status fields.</li>
+        </ul>
 
         <h2>3. MCP Tool Modifications</h2>
         
@@ -174,56 +225,87 @@ class MemoryProposal(BaseModel):
             <h3><span class="tag tool">MCP Tool</span> propose_registry_update</h3>
             <p><strong>Purpose:</strong> Allows the agent to submit a draft update without modifying the filesystem.</p>
             <ul>
-                <li><strong>Inputs:</strong> <code>target_project</code>, <code>section_heading</code>, <code>proposed_content</code>, <code>rationale</code>.</li>
-                <li><strong>Logic:</strong> Validates the target project exists in the registry. Appends the <code>MemoryProposal</code> to the local queue.</li>
-                <li><strong>Return to Agent:</strong> <em>"Proposal [ID] successfully submitted. Awaiting human approval."</em></li>
+                <li><strong>Inputs:</strong> <code>target_project</code>, <code>section_heading</code>, <code>proposed_content</code>, <code>rationale</code>, optional <code>agent_id</code>.</li>
+                <li><strong>Logic:</strong> Validate the target project exists, resolve <code>ProjectRecord.agent_file_path</code>, validate that path through the managed-file path guard, then append a <code>MemoryProposal</code> to the local queue.</li>
+                <li><strong>Return to Agent:</strong> <code>{"proposal_id": "...", "status": "pending", "message": "Proposal ... submitted. Awaiting human approval."}</code></li>
             </ul>
         </div>
 
         <div class="phase-box">
-            <h3><span class="tag tool">System Prompt Injection</span></h3>
+            <h3><span class="tag tool">System Directive</span></h3>
             <p><strong>Purpose:</strong> Conditions the agent to use the new workflow.</p>
-            <p>We will dynamically prepend this global instruction to the root <code>AGENTS.md</code> resolution:</p>
+            <p>Expose this directive as both an MCP prompt and a resource, and inject it into resolved context payloads so agents receive the instruction during normal <code>resolve_context</code> flows.</p>
             <pre><code>SYSTEM DIRECTIVE: 
 When you resolve a complex bug or establish a new rule, DO NOT assume it should be saved.
 Ask the user: "Should I add this to the project's AGENTS.md?"
 If the user agrees, use the `propose_registry_update` tool. Do not use direct file write tools.</code></pre>
         </div>
 
+        <h3>Direct Write Gate</h3>
+        <ul>
+            <li><code>allow_direct_writes: false</code> is the default.</li>
+            <li>When false, <code>update_managed_file</code> and <code>update_managed_file_section</code> are not registered as MCP tools.</li>
+            <li>Approval still calls the underlying registry write method directly after a human approves the proposal.</li>
+        </ul>
+
         <h2>4. Web UI Extensions (FastAPI + JS)</h2>
-        <p>The local admin interface (currently at port <code>8002</code>) is the core of the human-in-the-loop experience. We will add a "Memory Proposals" dashboard tab.</p>
+        <p>The local admin interface is the core of the human-in-the-loop experience. Add and maintain a <strong>Review Queue</strong> dashboard tab for pending and historical memory proposals.</p>
 
         <h3>New API Endpoints</h3>
         <ul>
-            <li><span class="tag api">GET</span> <code>/api/proposals</code> - Fetch all pending proposals.</li>
-            <li><span class="tag api">POST</span> <code>/api/proposals/{id}/approve</code> - Triggers the actual file write logic (reuses existing <code>update_managed_file_section</code> backend logic) and marks status as approved.</li>
+            <li><span class="tag api">GET</span> <code>/api/proposals</code> - List proposals. Supports optional <code>?status=pending|approved|rejected</code>.</li>
+            <li><span class="tag api">POST</span> <code>/api/proposals</code> - Convenience/admin endpoint for creating a proposal through the same validation path as the MCP tool.</li>
+            <li><span class="tag api">POST</span> <code>/api/proposals/{id}/approve</code> - Triggers the actual file write logic, refreshes the index, and marks status as approved.</li>
             <li><span class="tag api">POST</span> <code>/api/proposals/{id}/reject</code> - Marks as rejected and archives.</li>
-            <li><span class="tag api">PATCH</span> <code>/api/proposals/{id}</code> - Allows the human to edit the proposed markdown before approving.</li>
+            <li><span class="tag api">PATCH</span> <code>/api/proposals/{id}</code> - Allows the human to edit <code>section_heading</code> and <code>proposed_content</code> before approving. Must reject edits unless status is <code>pending</code>.</li>
         </ul>
+        <p>API errors should use a consistent JSON shape. The working target is <code>{"error": "..."}</code> for proposal routes unless the whole admin API is deliberately standardized around another shape.</p>
 
         <h3>Frontend UX (app.js / admin.html)</h3>
         <p>The UI will feature a notification badge next to a "Review Queue" tab. Each proposal will render as a card displaying:</p>
         <ol>
-            <li><strong>Target:</strong> Badge indicating which <code>AGENTS.md</code> file will be modified.</li>
+            <li><strong>Target:</strong> Project badge plus target file path, truncated visually with a tooltip containing the full path.</li>
+            <li><strong>Agent ID:</strong> Shown when non-empty.</li>
             <li><strong>Rationale:</strong> The agent's reasoning.</li>
-            <li><strong>Diff Viewer:</strong> A markdown text area where the user can tweak the code before hitting "Merge".</li>
+            <li><strong>Review editor:</strong> Editable heading input and markdown textarea for pending proposals.</li>
+            <li><strong>Actions:</strong> Approve and Reject buttons. After success, remove the card from the pending queue and refresh the badge.</li>
+            <li><strong>History:</strong> Toggle to show approved/rejected proposals as read-only cards, including their final content.</li>
         </ol>
 
         <h2>5. Execution Action Items</h2>
-        <p>Follow these steps to implement the workflow in the Python codebase:</p>
+        <p>Use this list as the active backlog. Status is based on the 2026-06-21 reconciliation of code and tests.</p>
         
         <ul class="task-list">
-            <li><strong>Data Layer:</strong> Create <code>mcp_agents_registry/proposals.py</code> with the Pydantic schema and JSON file-backed CRUD operations.</li>
-            <li><strong>Server Layer (MCP):</strong> Register <code>@mcp.tool() def propose_registry_update(...)</code> in <code>server.py</code>.</li>
-            <li><strong>Prompt Layer:</strong> Update <code>resolver.py</code> to prepend the System Directive string to the top of resolved context payloads.</li>
-            <li><strong>Web Layer (Backend):</strong> Add the four new <code>/api/proposals</code> routes in <code>web.py</code>.</li>
-            <li><strong>Web Layer (Frontend):</strong> Update <code>admin.html</code> and <code>app.js</code> to include the Proposal Review panel.</li>
-            <li><strong>File Writing:</strong> Link the <code>approve</code> endpoint to the existing <code>update_managed_file_section()</code> utility, ensuring the file's <code>mtime</code> updates correctly trigger an automatic cache invalidation.</li>
+            <li class="done"><strong>Data Layer:</strong> Create <code>mcp_agents_registry/proposals.py</code> with <code>MemoryProposal</code>, JSON persistence, CRUD, status filtering, and atomic writes.</li>
+            <li><strong>Data Hardening:</strong> Add a file lock around proposal read-modify-write operations so concurrent adds/updates cannot overwrite each other.</li>
+            <li class="done"><strong>Config Layer:</strong> Add <code>allow_direct_writes</code> and <code>proposals_path</code> to <code>AppConfig</code> and <code>config.yaml.example</code>.</li>
+            <li class="done"><strong>Config Cleanup:</strong> Add the proposal keys to the active <code>config.yaml</code> so local behavior is explicit, not only defaulted.</li>
+            <li class="done"><strong>Registry Layer:</strong> Wire <code>ProposalStore</code> and add proposal delegation methods.</li>
+            <li class="partial"><strong>Approval Semantics:</strong> Ensure approval writes and refreshes first, then marks the proposal approved. Current code marks approved before the write and rolls back on failure.</li>
+            <li><strong>Pending-Only Edits:</strong> Enforce that <code>edit_proposal</code> and <code>PATCH /api/proposals/{id}</code> only work for pending proposals.</li>
+            <li class="partial"><strong>Server Layer (MCP):</strong> Register <code>propose_registry_update</code>. Remaining: explicitly validate the resolved target path through the managed-file guard before queuing.</li>
+            <li class="done"><strong>Direct Write Gate:</strong> Conditionally register direct write MCP tools only when <code>allow_direct_writes: true</code>.</li>
+            <li class="partial"><strong>Directive Layer:</strong> Expose the memory curation directive as an MCP prompt and resource. Remaining: inject or include it in resolved context payloads.</li>
+            <li class="partial"><strong>Web Layer (Backend):</strong> Add proposal routes. Remaining: standardize proposal route errors to <code>{"error": "..."}</code> or document the chosen <code>{"detail": "..."}</code> shape.</li>
+            <li class="partial"><strong>Web Layer (Frontend):</strong> Add Review Queue panel, badge, editable pending cards, approve/reject actions, and history toggle. Remaining: full target path tooltip, read-only content in history, and action polish.</li>
+            <li class="done"><strong>File Writing:</strong> Link approval to the existing <code>update_managed_file_section()</code> utility and index refresh path.</li>
+            <li class="done"><strong>Tests:</strong> Add unit/integration coverage for proposal store, tool behavior, direct-write gating, approval, and web proposal routes.</li>
+            <li><strong>Docs:</strong> Update <code>README.md</code> to document the proposal-first workflow, <code>propose_registry_update</code>, direct-write gating, web review queue, and proposal config keys.</li>
+        </ul>
+
+        <h2>6. Verification Checklist</h2>
+        <ul class="task-list">
+            <li class="done">Run <code>uv run pytest tests/test_proposals.py tests/test_web_proposals.py -q</code>.</li>
+            <li>Run the full test suite with <code>uv run pytest tests/ -q</code> after remaining implementation changes.</li>
+            <li>Start the admin UI and manually verify proposal creation, edit-on-blur, approve, reject, badge refresh, and history mode.</li>
+            <li>Verify that direct write MCP tools are absent when <code>allow_direct_writes: false</code> and present when true.</li>
+            <li>Verify that resolved context includes the memory curation directive once resolver injection is implemented.</li>
+            <li>Verify concurrent proposal submissions do not lose entries after file locking is added.</li>
         </ul>
 
         <div class="callout" style="background-color: #f0fdf4; border-color: #bbf7d0;">
-            <h4 style="color: #15803d;">Bonus: Proactive Context Refresh (Watchdog)</h4>
-            <p>To eliminate polling delays after a proposal is approved, integrate the <code>watchdog</code> Python library in <code>scanner.py</code>. This will instantly detect the human-approved write to <code>AGENTS.md</code> and re-parse the hierarchical context graph in real-time.</p>
+            <h4 style="color: #15803d;">Phase 2: Proactive Context Refresh (Watchdog)</h4>
+            <p>To eliminate polling delays for external edits and non-proposal writes, integrate the <code>watchdog</code> Python library around configured roots. Approval-triggered writes already control the write path and should refresh immediately, but watchdog support can keep the registry current when users or other tools edit <code>AGENTS.md</code>/<code>CLAUDE.md</code> outside the proposal flow.</p>
         </div>
     </div>
 </body>
