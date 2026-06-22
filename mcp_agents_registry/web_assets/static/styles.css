@@ -573,6 +573,87 @@ pre {
   font-size: 13px;
 }
 
+/* Help & Reference panel */
+.panel-help {
+  grid-column: 2 / -1;
+}
+
+.doc {
+  display: grid;
+  gap: 18px;
+  max-width: 1000px;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.doc p {
+  margin: 0;
+}
+
+.doc-lead {
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.doc-h {
+  margin: 8px 0 -4px;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 700;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.doc .subcard p {
+  color: var(--ink-soft);
+}
+
+.doc-list {
+  margin: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.doc-list dt {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.doc-list dd {
+  margin: 4px 0 0;
+}
+
+.doc-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--ink-dim);
+  border: 1px solid var(--line);
+  background: var(--bg-subtle);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.doc code {
+  font-family: var(--mono);
+  font-size: 0.86em;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--bg-sunk);
+  border: 1px solid var(--line-soft);
+  color: var(--ink);
+}
+
+.doc abbr {
+  text-decoration: none;
+  border-bottom: 1px dotted var(--ink-dim);
+  cursor: help;
+}
+
 /* footer */
 .footbar {
   display: flex;
@@ -618,7 +699,8 @@ pre {
     display: none;
   }
 
-  .panel-editor {
+  .panel-editor,
+  .panel-help {
     grid-column: 1 / -1;
   }
 }

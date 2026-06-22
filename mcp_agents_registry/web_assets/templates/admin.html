@@ -58,6 +58,7 @@
         <span>Review Queue</span>
         <span class="badge" id="proposalBadge" style="display:none"></span>
       </a>
+      <a href="#sec-help" class="nav-item"><span class="num">07</span><span>Help &amp; Reference</span></a>
       <div class="sidenav-foot">
         <div class="legend"><span class="dot dot-ok"></span>Online</div>
         <div class="legend mono-small">Hierarchy merge</div>
@@ -202,6 +203,122 @@
         </div>
         <ul id="proposalList" class="item-list"></ul>
         <p id="proposalEmpty" style="display:none; color: var(--fg-muted);">No pending proposals.</p>
+      </div>
+    </section>
+
+    <section id="sec-help" class="panel panel-help">
+      <header class="panel-head">
+        <div class="panel-title">
+          <span class="panel-num">07</span>
+          <h2>Help &amp; Reference</h2>
+        </div>
+        <span class="panel-tag">How everything works</span>
+      </header>
+      <div class="panel-body">
+        <div class="doc">
+          <p class="doc-lead">
+            <strong>Agents Registry</strong> discovers and indexes the hierarchical
+            <code>AGENTS.md</code> / <code>agents.md</code> files scattered across your
+            configured root directories, then resolves the <em>effective</em>, inherited
+            instructions for any path in your codebase. The same data is available here in
+            the admin UI and to agents over the <abbr title="Model Context Protocol">MCP</abbr>
+            server.
+          </p>
+
+          <h3 class="doc-h">Core concepts</h3>
+          <div class="two-col">
+            <div class="subcard">
+              <h3><span class="tick">▸</span> AGENTS.md &amp; CLAUDE.md files</h3>
+              <p>
+                Plain-Markdown files that hold instructions for AI agents — purpose, tech
+                stack, commands, setup steps, constraints, coding rules, and a
+                definition&nbsp;of&nbsp;done. Drop one at any level of your tree; deeper files
+                describe more specific scopes.
+              </p>
+            </div>
+            <div class="subcard">
+              <h3><span class="tick">▸</span> Hierarchy merge (nearest wins)</h3>
+              <p>
+                For a given path the registry collects every ancestor file (shallowest first)
+                and merges them. <strong>Nearest wins</strong> for <code>purpose</code> and
+                <code>overview</code>; lists like <code>commands</code>,
+                <code>constraints</code>, <code>setup</code> and <code>stack</code> are
+                <strong>combined and de-duplicated</strong>; keyed sections such as
+                <code>coding_rules</code> are replaced entry-by-entry by the nearest file.
+              </p>
+            </div>
+            <div class="subcard">
+              <h3><span class="tick">▸</span> The MCP server surface</h3>
+              <p>
+                Agents connect over MCP and get <strong>5 tools</strong>
+                (<code>list_projects</code>, <code>get_project</code>,
+                <code>resolve_context</code>, <code>search_projects</code>,
+                <code>refresh_index</code>), <strong>5 resources</strong> under
+                <code>agents://</code>, and <strong>2 prompt</strong> templates. This admin UI
+                calls the same underlying registry.
+              </p>
+            </div>
+            <div class="subcard">
+              <h3><span class="tick">▸</span> The cache &amp; refresh</h3>
+              <p>
+                Parsed files are cached on disk and keyed by path. A
+                <strong>Refresh Index</strong> only re-parses files whose modification time,
+                size, or content hash changed — so refreshing is cheap and safe to run often.
+              </p>
+            </div>
+          </div>
+
+          <h3 class="doc-h">The panels, explained</h3>
+          <dl class="doc-list">
+            <dt><span class="doc-num">01</span> Registry</dt>
+            <dd>
+              Lists every indexed project and lets you search across names, paths, tags and
+              file contents (all terms must match). Use <strong>↻ Refresh Index</strong> after
+              editing files on disk, and <strong>Reload Projects</strong> to repaint the list.
+              Click a project to load it into the Inspector.
+            </dd>
+
+            <dt><span class="doc-num">02</span> Inspector</dt>
+            <dd>
+              Resolves the <em>effective</em> inherited context. Paste any absolute path under
+              a configured root and press <strong>→ Resolve Context</strong> to see the merged
+              result, or use <strong>Project Effective Context</strong> for a selected
+              project's root. Paths outside the configured roots are rejected.
+            </dd>
+
+            <dt><span class="doc-num">03</span> Accounts &amp; Devices</dt>
+            <dd>
+              Your inventory of who (accounts) and what (devices) runs agents.
+              <strong>Load Inventory</strong> lists them; <strong>Coverage Report</strong>
+              summarizes gaps. The two cards create a new account or device.
+            </dd>
+
+            <dt><span class="doc-num">04</span> Installations &amp; Skills</dt>
+            <dd>
+              Records which agent (and which skills) is installed on a given account + device.
+              <strong>Assign Installation</strong> creates the link;
+              <strong>Where is this agent?</strong> and <strong>Skills on account/device</strong>
+              answer locate-style questions across the inventory.
+            </dd>
+
+            <dt><span class="doc-num">05</span> Markdown Editor</dt>
+            <dd>
+              Read and edit the managed <code>AGENTS.md</code> / <code>CLAUDE.md</code> files
+              directly. <strong>List Managed Files</strong> finds them,
+              <strong>Read File</strong> loads one, <strong>Preview Save</strong> shows the
+              diff, and <strong>✓ Commit Save</strong> writes it back (with a hash check to
+              avoid clobbering concurrent edits).
+            </dd>
+
+            <dt><span class="doc-num">06</span> Review Queue</dt>
+            <dd>
+              Pending memory/registry-update <strong>proposals</strong> raised by agents. Edit
+              the heading or content inline, then <strong>approve</strong> (applies it to the
+              target file) or <strong>reject</strong> it. Toggle the checkbox to see approved
+              and rejected history.
+            </dd>
+          </dl>
+        </div>
       </div>
     </section>
   </main>
