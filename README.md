@@ -348,7 +348,7 @@ http://127.0.0.1:8002
 From the repository root, this single PowerShell command will sync deps, start the admin server, and open the UI in your browser:
 
 ```powershell
-uv sync; $env:AGENTS_REGISTRY_CONFIG = "config.yaml"; Start-Process "http://127.0.0.1:8002"; uv run mcp-agents-registry-web --host 127.0.0.1 --port 8002
+uv sync --extra web; $env:AGENTS_REGISTRY_CONFIG = "config.yaml"; Start-Process "http://127.0.0.1:8002"; uv run mcp-agents-registry-web --host 127.0.0.1 --port 8002
 ```
 
 Stop the server with `Ctrl+C` in the same terminal when done.
