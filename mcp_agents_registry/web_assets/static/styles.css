@@ -368,12 +368,14 @@ body {
 }
 
 input,
+select,
 textarea,
 button {
   font: inherit;
 }
 
 input,
+select,
 textarea {
   width: 100%;
   border: 1px solid var(--line);
@@ -392,6 +394,7 @@ textarea::placeholder {
 }
 
 input:focus,
+select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--accent);
@@ -437,6 +440,23 @@ button.secondary:hover {
   color: var(--accent);
   border-color: var(--feature-line);
   background: var(--accent-soft);
+}
+
+button.danger {
+  background: var(--danger);
+  color: #ffffff;
+  border-color: var(--danger);
+}
+
+button.danger:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
+button.mini {
+  min-height: 30px;
+  padding: 5px 8px;
+  font-size: 12px;
 }
 
 /* project list */
@@ -530,6 +550,64 @@ pre {
   font-style: normal;
 }
 
+.state-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  color: var(--ink-soft);
+  font-size: 12px;
+}
+
+.state-item {
+  padding: 2px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--bg-panel);
+}
+
+.detail-panel {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg-panel);
+  padding: 14px;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.detail-grid > div,
+.detail-section {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.detail-grid code {
+  color: var(--ink-soft);
+  word-break: break-all;
+  white-space: normal;
+}
+
+.label {
+  color: var(--ink-dim);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.empty-state,
+.muted {
+  color: var(--ink-dim);
+}
+
 .action-row {
   display: flex;
   gap: 8px;
@@ -571,6 +649,141 @@ pre {
 .editor-large {
   min-height: min(68vh, 760px);
   font-size: 13px;
+}
+
+.diff-preview,
+.skills-overview {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 12px;
+  background: var(--bg-subtle);
+  color: var(--ink-soft);
+}
+
+.data-table-wrap {
+  display: grid;
+  gap: 8px;
+  overflow: auto;
+}
+
+.data-table-wrap h3 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 15px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-panel);
+  font-size: 13px;
+}
+
+.data-table th,
+.data-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--line-soft);
+  text-align: left;
+  vertical-align: top;
+}
+
+.data-table th {
+  color: var(--ink-dim);
+  background: var(--bg-subtle);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.data-table td:last-child {
+  white-space: nowrap;
+}
+
+.data-table tr:last-child td {
+  border-bottom: none;
+}
+
+.field-label {
+  color: var(--ink-dim);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.item-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.card {
+  display: grid;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px;
+  background: var(--bg-subtle);
+}
+
+.card-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.card-rationale {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.card-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.proposal-content {
+  max-height: 220px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.46);
+}
+
+.modal-backdrop[hidden] {
+  display: none;
+}
+
+.modal {
+  width: min(440px, 100%);
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg-panel);
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.22);
+}
+
+.modal h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.modal p {
+  margin: 0;
+  color: var(--ink-soft);
 }
 
 /* Help & Reference panel */
@@ -731,7 +944,8 @@ pre {
 
   .controls,
   .two-col,
-  .field-grid {
+  .field-grid,
+  .detail-grid {
     grid-template-columns: 1fr;
   }
 

@@ -156,6 +156,89 @@ class WebApiTests(unittest.TestCase):
                 self.assertEqual(skills.status_code, 200)
                 self.assertEqual(skills.json()["skills"], ["python", "mcp"])
 
+                update_account = client.patch(
+                    "/api/accounts/acct-main",
+                    json={
+                        "display_name": "Primary Account",
+                        "provider": "openai",
+                        "tags": ["work", "primary"],
+                        "metadata": {"seat": "admin"},
+                    },
+                )
+                self.assertEqual(update_account.status_code, 200)
+                self.assertEqual(update_account.json()["display_name"], "Primary Account")
+                self.assertEqual(update_account.json()["tags"], ["work", "primary"])
+
+                update_device = client.patch(
+                    "/api/devices/dev-laptop",
+                    json={
+                        "display_name": "Workstation",
+                        "platform": "linux-x64",
+                        "tags": ["desktop"],
+                        "metadata": {"role": "daily"},
+                    },
+                )
+                self.assertEqual(update_device.status_code, 200)
+                self.assertEqual(update_device.json()["platform"], "linux-x64")
+
+                inventory_search = client.get("/api/inventory/search", params={"skill": "mcp", "path": "AGENTS"})
+                self.assertEqual(inventory_search.status_code, 200)
+                self.assertEqual(len(inventory_search.json()["installations"]), 1)
+                self.assertEqual(len(inventory_search.json()["files"]), 1)
+
+                removed_installation = client.delete(
+                    "/api/installations",
+                    params={
+                        "account_id": "acct-main",
+                        "device_id": "dev-laptop",
+                        "agent_name": "Copilot",
+                    },
+                )
+                self.assertEqual(removed_installation.status_code, 200)
+                self.assertTrue(removed_installation.json()["removed"])
+
+                delete_device = client.delete("/api/devices/dev-laptop")
+                self.assertEqual(delete_device.status_code, 200)
+                self.assertEqual(delete_device.json()["removed_installations"], 0)
+
+                delete_account = client.delete("/api/accounts/acct-main")
+                self.assertEqual(delete_account.status_code, 200)
+                self.assertEqual(delete_account.json()["removed_installations"], 0)
+
+    def test_admin_state_reports_write_policy_and_roots(self) -> None:
+        if WEB_IMPORT_ERROR is not None or TestClient is None or create_web_app is None:
+            self.skipTest(f"Web test dependencies are missing: {WEB_IMPORT_ERROR}")
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir) / "workspace"
+            root.mkdir(parents=True, exist_ok=True)
+            (root / "AGENTS.md").write_text("# Purpose\nWorkspace defaults\n", encoding="utf-8")
+
+            config_path = Path(temp_dir) / "config.yaml"
+            config_path.write_text(
+                "\n".join(
+                    [
+                        "roots:",
+                        f"  - {root}",
+                        "cache_enabled: false",
+                        "parse_sections: true",
+                        "allow_direct_writes: false",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+
+            app = create_web_app(str(config_path))
+            with TestClient(app) as client:
+                state = client.get("/api/admin/state")
+                self.assertEqual(state.status_code, 200)
+                payload = state.json()
+                self.assertFalse(payload["allow_direct_writes"])
+                self.assertEqual(payload["roots"], [str(root.resolve())])
+                self.assertEqual(payload["agent_filenames"], ["AGENTS.md", "agents.md", "CLAUDE.md", "claude.md"])
+                self.assertEqual(payload["merge_mode"], "hierarchy")
+
 
 if __name__ == "__main__":
     unittest.main()

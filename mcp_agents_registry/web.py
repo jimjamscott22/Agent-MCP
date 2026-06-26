@@ -28,6 +28,20 @@ def create_web_app(config_path: str | None = None) -> Any:
     def health() -> dict[str, str]:
         return {"status": "ok"}
 
+    @app.get("/api/admin/state")
+    def admin_state() -> dict[str, object]:
+        return {
+            "allow_direct_writes": registry.config.allow_direct_writes,
+            "roots": [str(root) for root in registry.config.roots],
+            "agent_filenames": list(registry.config.agent_filenames),
+            "merge_mode": registry.config.merge_mode,
+            "cache_enabled": registry.config.cache_enabled,
+            "parse_sections": registry.config.parse_sections,
+            "follow_symlinks": registry.config.follow_symlinks,
+            "inventory_path": str(registry.config.inventory_path) if registry.config.inventory_path else "",
+            "proposals_path": str(registry.config.proposals_path) if registry.config.proposals_path else "",
+        }
+
     @app.get("/api/projects")
     def list_projects() -> dict[str, object]:
         return {"projects": registry.list_projects()}

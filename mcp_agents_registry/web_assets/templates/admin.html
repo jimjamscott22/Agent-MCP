@@ -98,6 +98,10 @@
         <div class="summary-box" id="summary">
           <em>Idle.</em> Select a project from the registry, or enter a path below to resolve its effective inherited context.
         </div>
+        <div id="adminState" class="state-strip">Loading admin state...</div>
+        <div id="projectDetails" class="detail-panel">
+          <div class="empty-state">No project selected.</div>
+        </div>
         <textarea id="pathInput" placeholder="/absolute/path/to/resolve…"></textarea>
         <div class="action-row">
           <button id="resolveBtn">→ Resolve Context</button>
@@ -124,6 +128,15 @@
           <button id="saveFileBtn">✓ Commit Save</button>
         </div>
         <textarea id="fileEditor" class="editor-large" placeholder="# File contents will appear here…"></textarea>
+        <div id="diffPreview" class="diff-preview">No save preview yet.</div>
+        <div class="subcard">
+          <h3><span class="tick">▸</span> Section Update</h3>
+          <input id="sectionHeadingInput" placeholder="Section heading, for example Commands" />
+          <textarea id="sectionContentInput" placeholder="Markdown body for this section…"></textarea>
+          <div class="action-row">
+            <button id="writeSectionBtn" class="secondary">Save Section</button>
+          </div>
+        </div>
       </div>
     </section>
 
@@ -140,12 +153,18 @@
           <button id="loadInventoryBtn">Load Inventory</button>
           <button id="coverageBtn" class="secondary">Coverage Report</button>
         </div>
+        <div class="controls">
+          <input id="inventorySearchPath" placeholder="filter managed files by path…" />
+          <button id="inventorySearchBtn" class="secondary">Search Inventory</button>
+        </div>
         <div class="two-col">
           <div class="subcard">
             <h3><span class="tick">▸</span> New Account</h3>
             <input id="accountId" placeholder="account_id" />
             <input id="accountName" placeholder="display_name" />
             <input id="accountProvider" placeholder="provider (optional)" />
+            <input id="accountTags" placeholder="tags (comma separated)" />
+            <input id="accountMetadata" placeholder="metadata key=value, comma separated" />
             <button id="createAccountBtn">Create Account</button>
           </div>
           <div class="subcard">
@@ -153,8 +172,24 @@
             <input id="deviceId" placeholder="device_id" />
             <input id="deviceName" placeholder="display_name" />
             <input id="devicePlatform" placeholder="platform (optional)" />
+            <input id="deviceTags" placeholder="tags (comma separated)" />
+            <input id="deviceMetadata" placeholder="metadata key=value, comma separated" />
             <button id="createDeviceBtn">Create Device</button>
           </div>
+        </div>
+        <div class="data-table-wrap">
+          <h3>Accounts</h3>
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Provider</th><th>Tags</th><th>Actions</th></tr></thead>
+            <tbody id="accountsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="data-table-wrap">
+          <h3>Devices</h3>
+          <table class="data-table">
+            <thead><tr><th>ID</th><th>Name</th><th>Platform</th><th>Tags</th><th>Actions</th></tr></thead>
+            <tbody id="devicesTableBody"></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -183,6 +218,14 @@
           <button id="whereAgentBtn" class="secondary">Where is this agent?</button>
           <button id="skillsBtn" class="secondary">Skills on account/device</button>
         </div>
+        <div id="skillsOverview" class="skills-overview">Load inventory to see skills.</div>
+        <div class="data-table-wrap">
+          <h3>Installations</h3>
+          <table class="data-table">
+            <thead><tr><th>Account</th><th>Device</th><th>Agent</th><th>Skills</th><th>Actions</th></tr></thead>
+            <tbody id="installationsTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -195,6 +238,17 @@
         <span class="panel-tag">Memory proposals</span>
       </header>
       <div class="panel-body">
+        <div class="subcard">
+          <h3><span class="tick">▸</span> New Memory Proposal</h3>
+          <div class="field-grid">
+            <select id="proposalProject"></select>
+            <input id="proposalSection" placeholder="section heading" />
+          </div>
+          <textarea id="proposalContent" placeholder="proposed markdown content…"></textarea>
+          <input id="proposalRationale" placeholder="rationale" />
+          <input id="proposalAgentId" placeholder="agent_id (optional)" />
+          <button id="createProposalBtn">Create Proposal</button>
+        </div>
         <div class="toolbar">
           <label>
             <input type="checkbox" id="showHistory" />
@@ -322,6 +376,17 @@
       </div>
     </section>
   </main>
+
+  <div id="confirmModal" class="modal-backdrop" hidden>
+    <div class="modal">
+      <h2 id="confirmTitle">Confirm action</h2>
+      <p id="confirmMessage"></p>
+      <div class="action-row">
+        <button id="confirmOkBtn" class="danger">Confirm</button>
+        <button id="confirmCancelBtn" class="secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
 
   <footer class="footbar">
     <span>agents-registry</span>
